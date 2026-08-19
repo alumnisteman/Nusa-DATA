@@ -2,7 +2,7 @@
 import { useState } from 'react';
 
 export default function LoginPage() {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
   const [form, setForm] = useState({ email: '', password: '' });
   const [message, setMessage] = useState({ text: '', type: '' });
   const [loading, setLoading] = useState(false);

@@ -89,9 +89,9 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV:-development}
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://nusa_admin:nusa_password@postgres:5432/restart_ai?schema=public}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
-      RABBITMQ_URL: ${RABBITMQ_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://restart:changeme@rabbitmq:5672}
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-changeme}
       MEILISEARCH_URL: ${MEILISEARCH_URL:-http://meilisearch:7700}
       JWT_SECRET: ${JWT_SECRET:-changeme}
@@ -151,8 +151,8 @@ services:
     container_name: restart-ai-worker
     restart: unless-stopped
     environment:
-      DATABASE_URL: ${DATABASE_URL}
-      RABBITMQ_URL: ${RABBITMQ_URL}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://nusa_admin:nusa_password@postgres:5432/restart_ai?schema=public}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://restart:changeme@rabbitmq:5672}
     depends_on:
       postgres:
         condition: service_healthy
@@ -168,8 +168,8 @@ services:
     container_name: restart-data-worker
     restart: unless-stopped
     environment:
-      DATABASE_URL: ${DATABASE_URL}
-      RABBITMQ_URL: ${RABBITMQ_URL}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://nusa_admin:nusa_password@postgres:5432/restart_ai?schema=public}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://restart:changeme@rabbitmq:5672}
       BPS_API_KEY: ${BPS_API_KEY}
       BPS_API_URL: ${BPS_API_URL:-https://webapi.bps.go.id/v1/}
     depends_on:
@@ -187,8 +187,8 @@ services:
     container_name: restart-notification-worker
     restart: unless-stopped
     environment:
-      DATABASE_URL: ${DATABASE_URL}
-      RABBITMQ_URL: ${RABBITMQ_URL}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://nusa_admin:nusa_password@postgres:5432/restart_ai?schema=public}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://restart:changeme@rabbitmq:5672}
     depends_on:
       postgres:
         condition: service_healthy
@@ -204,8 +204,8 @@ services:
     container_name: restart-nusa-worker
     restart: unless-stopped
     environment:
-      DATABASE_URL: ${DATABASE_URL}
-      RABBITMQ_URL: ${RABBITMQ_URL}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://nusa_admin:nusa_password@postgres:5432/restart_ai?schema=public}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://restart:changeme@rabbitmq:5672}
     depends_on:
       postgres:
         condition: service_healthy

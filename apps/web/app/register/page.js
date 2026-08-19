@@ -2,7 +2,7 @@
 import { useState } from 'react';
 
 export default function RegisterPage() {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -47,8 +47,9 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage({ text: '✅ Registrasi berhasil! Silakan cek email untuk verifikasi.', type: 'success' });
+        setMessage({ text: '✅ Registrasi berhasil! Silakan login untuk melanjutkan.', type: 'success' });
         setForm({ fullName: '', email: '', password: '', confirmPassword: '', userType: 'PHK' });
+        setTimeout(() => { window.location.href = '/login'; }, 2000);
       } else {
         setMessage({ text: data.error || 'Registrasi gagal. Coba lagi.', type: 'error' });
       }
