@@ -1,0 +1,225 @@
+services:
+  nginx:
+    build:
+      context: ./infrastructure/nginx
+      dockerfile: Dockerfile
+    container_name: restart-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      # - "443:443"
+
+    depends_on:
+      - web
+    networks:
+      - restart-network
+  postgres:
+    image: postgres:16-alpine
+    container_name: restart-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-restart_ai}
+      POSTGRES_USER: ${POSTGRES_USER:-restart}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - restart-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-restart} -d ${POSTGRES_DB:-restart_ai}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: restart-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - restart-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: restart-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-restart}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-changeme}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - restart-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 30s
+      retries: 10
+      start_period: 60s
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.5
+    container_name: restart-meilisearch
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-changeme}
+      MEILI_ENV: production
+    volumes:
+      - meilisearch_data:/meili_data
+    networks:
+      - restart-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: restart-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-changeme}
+      MEILISEARCH_URL: ${MEILISEARCH_URL:-http://meilisearch:7700}
+      JWT_SECRET: ${JWT_SECRET:-changeme}
+      SESSION_SECRET: ${SESSION_SECRET:-changeme}
+      AI_PROVIDER: ${AI_PROVIDER:-openai}
+      AI_API_KEY: ${AI_API_KEY}
+      BPS_API_KEY: ${BPS_API_KEY}
+      BPS_API_URL: ${BPS_API_URL:-https://webapi.bps.go.id/v1/}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+    networks:
+      - restart-network
+    ports:
+      - "3001:3001"
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: restart-web
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=${API_URL:-http://localhost:3001}
+    depends_on:
+      - api
+    networks:
+      - restart-network
+    ports:
+      - "3000:3000"
+
+  admin:
+    build:
+      context: ./apps/admin
+      dockerfile: Dockerfile
+    container_name: restart-admin
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=${API_URL:-http://localhost:3001}
+    depends_on:
+      - api
+    networks:
+      - restart-network
+    ports:
+      - "3004:3004"
+
+  ai-worker:
+    build:
+      context: ./workers/ai-worker
+      dockerfile: Dockerfile
+    container_name: restart-ai-worker
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - restart-network
+
+  data-worker:
+    build:
+      context: ./workers/data-worker
+      dockerfile: Dockerfile
+    container_name: restart-data-worker
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      BPS_API_KEY: ${BPS_API_KEY}
+      BPS_API_URL: ${BPS_API_URL:-https://webapi.bps.go.id/v1/}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - restart-network
+
+  notification-worker:
+    build:
+      context: ./workers/notification-worker
+      dockerfile: Dockerfile
+    container_name: restart-notification-worker
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - restart-network
+
+  nusa-worker:
+    build:
+      context: ./workers/quality-worker
+      dockerfile: Dockerfile
+    container_name: restart-nusa-worker
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - restart-network
+
+networks:
+  restart-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  meilisearch_data:
