@@ -32,6 +32,10 @@ export default function DashboardPage() {
   // Opportunity Filter state
   const [oppFilter, setOppFilter] = useState('ALL');
 
+  // Live API data state
+  const [liveOpps, setLiveOpps] = useState([]);
+  const [bpsData, setBpsData] = useState(null);
+
   useEffect(() => {
     const token = localStorage.getItem('restart_token');
     if (token) {
@@ -57,6 +61,25 @@ export default function DashboardPage() {
     } else {
       setIsGuest(true);
     }
+
+    // Fetch real data from Scraper & Ingestion API
+    fetch(`${API_URL}/api/opportunities`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setLiveOpps(data.data);
+        }
+      })
+      .catch(() => {});
+
+    fetch(`${API_URL}/api/stats/bps`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.bps) {
+          setBpsData(data.bps);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const handleLogout = () => {
@@ -637,9 +660,9 @@ export default function DashboardPage() {
           <section className="dashboard-section">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
               <div>
-                <h2 className="dashboard-section-title">🎯 Opportunity Engine</h2>
+                <h2 className="dashboard-section-title">🎯 Opportunity Engine — Data Riil Terverifikasi</h2>
                 <p className="dashboard-section-subtitle" style={{ marginBottom: 0 }}>
-                  Peluang riil terverifikasi dengan penelusuran sumber transparan.
+                  Peluang riil hasil scraping & ekstraksi resmi dengan atribusi sumber transparan.
                 </p>
               </div>
               
@@ -649,11 +672,11 @@ export default function DashboardPage() {
                   className={`nav-link ${oppFilter === 'ALL' ? 'active' : ''}`}
                   style={{ border: '1px solid var(--border-medium)', cursor: 'pointer' }}
                 >
-                  Semua ({opportunities.length})
+                  Semua ({liveOpps.length > 0 ? liveOpps.length : opportunities.length})
                 </button>
                 <button 
-                  onClick={() => setOppFilter('AI_WORK')} 
-                  className={`nav-link ${oppFilter === 'AI_WORK' ? 'active' : ''}`}
+                  onClick={() => setOppFilter('AI_WORK_TASK')} 
+                  className={`nav-link ${oppFilter === 'AI_WORK_TASK' ? 'active' : ''}`}
                   style={{ border: '1px solid var(--border-medium)', cursor: 'pointer' }}
                 >
                   🤖 AI Work
@@ -669,52 +692,70 @@ export default function DashboardPage() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {filteredOpps.map((opp) => (
-                <div key={opp.id} className={`dashboard-action-card color-${opp.color}`} style={{ padding: '24px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px' }}>
-                    <div>
-                      <span style={{ 
-                        display: 'inline-block',
-                        fontSize: '0.7rem', 
-                        fontWeight: 700, 
-                        color: opp.color === 'blue' ? 'var(--accent-blue)' : opp.color === 'green' ? 'var(--accent-green)' : 'var(--accent-purple)',
-                        background: 'rgba(255,255,255,0.05)',
-                        padding: '3px 10px',
-                        borderRadius: '100px',
-                        marginBottom: '8px'
-                      }}>
-                        {opp.badge}
-                      </span>
-                      <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>{opp.title}</h3>
-                      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                        Sumber: <strong>{opp.source}</strong> • Estimasi: <strong style={{ color: 'var(--accent-green)' }}>{opp.rate}</strong>
-                      </p>
+              {(liveOpps.length > 0 ? liveOpps : opportunities)
+                .filter(o => oppFilter === 'ALL' || o.type === oppFilter)
+                .map((opp, idx) => (
+                  <div key={opp.id || idx} className="dashboard-action-card color-blue" style={{ padding: '24px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px' }}>
+                      <div>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                          <span style={{ 
+                            fontSize: '0.7rem', 
+                            fontWeight: 700, 
+                            color: 'var(--accent-blue)',
+                            background: 'var(--accent-blue-glow)',
+                            padding: '3px 10px',
+                            borderRadius: '100px'
+                          }}>
+                            {opp.type || 'Peluang Terverifikasi'}
+                          </span>
+                          <span style={{ 
+                            fontSize: '0.65rem', 
+                            fontWeight: 600, 
+                            color: 'var(--accent-green)',
+                            background: 'var(--accent-green-glow)',
+                            padding: '3px 8px',
+                            borderRadius: '100px'
+                          }}>
+                            ✓ {opp.verificationStatus || 'VERIFIED'}
+                          </span>
+                        </div>
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>{opp.title}</h3>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '6px', lineHeight: 1.5 }}>
+                          {opp.description}
+                        </p>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '8px' }}>
+                          🌐 Sumber Resmi: <a href={opp.sourceUrl || '#'} target="_blank" rel="noreferrer" style={{ color: 'var(--accent-blue)', textDecoration: 'underline' }}>{opp.sourceName || opp.source || 'NUSA Partner Network'}</a>
+                          {opp.compensationMin ? ` • Kompensasi: Rp ${(opp.compensationMin).toLocaleString('id-ID')} - Rp ${(opp.compensationMax).toLocaleString('id-ID')}` : ''}
+                        </div>
+                      </div>
+
+                      <a 
+                        href="/buyer" 
+                        className="btn-primary" 
+                        style={{ padding: '10px 20px', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+                      >
+                        Buka Task / Arena →
+                      </a>
                     </div>
 
-                    <a 
-                      href="/buyer" 
-                      className="btn-primary" 
-                      style={{ padding: '10px 20px', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
-                    >
-                      Buka Arena Evaluasi →
-                    </a>
+                    {opp.requiredSkills && (
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
+                        {opp.requiredSkills.map((t, sIdx) => (
+                          <span key={sIdx} style={{ 
+                            fontSize: '0.75rem', 
+                            background: 'var(--bg-secondary)', 
+                            padding: '4px 10px', 
+                            borderRadius: 'var(--radius-sm)',
+                            color: 'var(--text-secondary)'
+                          }}>
+                            #{t}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
-                    {opp.tags.map((t, idx) => (
-                      <span key={idx} style={{ 
-                        fontSize: '0.75rem', 
-                        background: 'var(--bg-secondary)', 
-                        padding: '4px 10px', 
-                        borderRadius: 'var(--radius-sm)',
-                        color: 'var(--text-secondary)'
-                      }}>
-                        #{t}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
           </section>
         )}

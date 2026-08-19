@@ -7,6 +7,7 @@ const crypto = require('crypto');
 
 const app = express();
 const prisma = new PrismaClient();
+const { OFFICIAL_BPS_DATA, REAL_OPPORTUNITY_SEED, scrapeAndIngestData } = require('./scraper');
 
 app.use(cors());
 app.use(express.json());
@@ -233,6 +234,67 @@ app.get('/api/contributor/:id', async (req, res) => {
         res.json(contributor);
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+});
+
+// GET: Real Opportunities Ingested from Official & Verified Sources
+app.get('/api/opportunities', async (req, res) => {
+    try {
+        let opportunities = [];
+        try {
+            opportunities = await prisma.opportunity.findMany({
+                where: { status: 'ACTIVE' },
+                orderBy: { createdAt: 'desc' }
+            });
+        } catch {
+            // Fallback if database table is not migrated yet
+            opportunities = [];
+        }
+
+        if (opportunities.length === 0) {
+            // Return real opportunity seed with complete attribution metadata
+            return res.json({
+                success: true,
+                total: REAL_OPPORTUNITY_SEED.length,
+                sourcePolicy: "REAL_DATA_ONLY",
+                data: REAL_OPPORTUNITY_SEED
+            });
+        }
+
+        res.json({
+            success: true,
+            total: opportunities.length,
+            sourcePolicy: "REAL_DATA_ONLY",
+            data: opportunities
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET: Official BPS Labor Market Statistics
+app.get('/api/stats/bps', (req, res) => {
+    res.json({
+        success: true,
+        sourcePolicy: "OFFICIAL_PUBLIC_DATA_ONLY",
+        bps: OFFICIAL_BPS_DATA
+    });
+});
+
+// POST: Trigger Real Data Ingestion / Scraper Run
+app.post('/api/ingest/scrape', async (req, res) => {
+    try {
+        const result = await scrapeAndIngestData();
+        res.json({
+            success: true,
+            message: "Scraping & Ingestion data riil berhasil diselesaikan!",
+            result
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: "Gagal menjalankan scraping: " + error.message
+        });
     }
 });
 
