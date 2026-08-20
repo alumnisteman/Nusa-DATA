@@ -9,7 +9,7 @@ COPY tsconfig.json ./
 COPY prisma ./prisma/
 
 # Install ALL dependencies (including devDeps like prisma CLI) so prisma generate works
-RUN npm ci
+RUN npm install
 
 COPY apps/api/ .
 
