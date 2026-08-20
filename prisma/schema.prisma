@@ -159,27 +159,27 @@ enum AuditAction {
 // ==========================================
 
 model User {
-  id                String      @id @default(uuid())
-  email             String      @unique
-  passwordHash      String
-  role              UserRole    @default(USER)
-  status            UserStatus  @default(PENDING_VERIFICATION)
-  profileType       ProfileType?
-  fullName          String
-  phone             String?
-  avatarUrl         String?
-  bio               String?
-  regionProvince    String?
-  regionCity        String?
-  birthYear         Int?
-  gender            String?
-  emailVerifiedAt   DateTime?
-  lastLoginAt       DateTime?
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  id              String       @id @default(uuid())
+  email           String       @unique
+  passwordHash    String
+  role            UserRole     @default(USER)
+  status          UserStatus   @default(PENDING_VERIFICATION)
+  profileType     ProfileType?
+  fullName        String
+  phone           String?
+  avatarUrl       String?
+  bio             String?
+  regionProvince  String?
+  regionCity      String?
+  birthYear       Int?
+  gender          String?
+  emailVerifiedAt DateTime?
+  lastLoginAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
-  organization      Organization? @relation(fields: [organizationId], references: [id])
-  organizationId    String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
 
   employmentHistory EmploymentHistory[]
   skills            UserSkill[]
@@ -200,6 +200,7 @@ model User {
   notifications     Notification[]
   auditLogs         AuditLog[]
   recoveryPlans     RecoveryPlan[]
+  Subscription      Subscription[]
 
   @@map("users")
 }
@@ -215,7 +216,7 @@ model Organization {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  users       User[]
+  users         User[]
   opportunities Opportunity[]
 
   @@map("organizations")
@@ -226,27 +227,27 @@ model Organization {
 // ==========================================
 
 model EmploymentHistory {
-  id              String         @id @default(uuid())
-  userId          String
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  companyName     String
-  position        String
-  industry        String?
-  startDate       DateTime
-  endDate         DateTime?
-  isCurrentJob    Boolean        @default(false)
-  salaryMin       Int?
-  salaryMax       Int?
-  currency        String         @default("IDR")
-  description     String?
-  achievements    String?
-  reasonForLeave  String?
-  isPHKTermination Boolean       @default(false)
-  phkDate         DateTime?
-  phkSeverancePay Int?
-  trustLevel      DataTrustLevel @default(SELF_DECLARED)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  id               String         @id @default(uuid())
+  userId           String
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName      String
+  position         String
+  industry         String?
+  startDate        DateTime
+  endDate          DateTime?
+  isCurrentJob     Boolean        @default(false)
+  salaryMin        Int?
+  salaryMax        Int?
+  currency         String         @default("IDR")
+  description      String?
+  achievements     String?
+  reasonForLeave   String?
+  isPHKTermination Boolean        @default(false)
+  phkDate          DateTime?
+  phkSeverancePay  Int?
+  trustLevel       DataTrustLevel @default(SELF_DECLARED)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   @@map("employment_history")
 }
@@ -264,23 +265,23 @@ model Skill {
   demandScore Float?
   createdAt   DateTime      @default(now())
 
-  userSkills  UserSkill[]
+  userSkills UserSkill[]
 
   @@map("skills")
 }
 
 model UserSkill {
-  id             String         @id @default(uuid())
-  userId         String
-  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  skillId        String
-  skill          Skill          @relation(fields: [skillId], references: [id])
-  proficiencyLevel Int          @default(1) // 1–5
-  yearsExperience Float?
-  trustLevel     DataTrustLevel @default(SELF_DECLARED)
-  lastVerifiedAt DateTime?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id               String         @id @default(uuid())
+  userId           String
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skillId          String
+  skill            Skill          @relation(fields: [skillId], references: [id])
+  proficiencyLevel Int            @default(1) // 1–5
+  yearsExperience  Float?
+  trustLevel       DataTrustLevel @default(SELF_DECLARED)
+  lastVerifiedAt   DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   @@unique([userId, skillId])
   @@map("user_skills")
@@ -304,7 +305,7 @@ model Experience {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
-  evidences   Evidence[]
+  evidences Evidence[]
 
   @@map("experiences")
 }
@@ -316,7 +317,7 @@ model Evidence {
   experienceId String?
   experience   Experience?    @relation(fields: [experienceId], references: [id])
   title        String
-  type         String         // certificate, document, portfolio, url, media
+  type         String // certificate, document, portfolio, url, media
   fileUrl      String?
   externalUrl  String?
   issuer       String?
@@ -335,23 +336,23 @@ model Evidence {
 // ==========================================
 
 model WorkDNA {
-  id                  String         @id @default(uuid())
-  userId              String         @unique
-  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  coreStrengths       String[]
-  workStyle           Json           // e.g. { "collaborative": 0.8, "autonomous": 0.6 }
-  industryExpertise   String[]
-  leadershipScore     Float?
-  adaptabilityScore   Float?
-  technicalDepth      Float?
-  managementBreadth   Float?
-  innovationIndex     Float?
-  economicPotential   Json?          // estimated earning ranges by path
-  careerPaths         Json[]         // computed recommended paths
-  trustLevel          DataTrustLevel @default(AI_ASSISTED)
-  lastComputedAt      DateTime?
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
+  id                String         @id @default(uuid())
+  userId            String         @unique
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coreStrengths     String[]
+  workStyle         Json // e.g. { "collaborative": 0.8, "autonomous": 0.6 }
+  industryExpertise String[]
+  leadershipScore   Float?
+  adaptabilityScore Float?
+  technicalDepth    Float?
+  managementBreadth Float?
+  innovationIndex   Float?
+  economicPotential Json? // estimated earning ranges by path
+  careerPaths       Json[] // computed recommended paths
+  trustLevel        DataTrustLevel @default(AI_ASSISTED)
+  lastComputedAt    DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   @@map("work_dna")
 }
@@ -361,16 +362,16 @@ model WorkDNA {
 // ==========================================
 
 model Assessment {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type        String   // skill, personality, career_readiness, income_gap
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String // skill, personality, career_readiness, income_gap
   title       String
   responses   Json
   result      Json?
   score       Float?
   completedAt DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
   @@map("assessments")
 }
@@ -380,46 +381,46 @@ model Assessment {
 // ==========================================
 
 model PHKProfile {
-  id                String         @id @default(uuid())
-  userId            String         @unique
-  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  phkDate           DateTime
-  lastCompany       String
-  lastPosition      String
-  lastSalary        Int?
-  yearsOfService    Int?
-  phkReason         String?
-  currentStatus     RecoveryStatus @default(ASSESSMENT)
+  id                  String         @id @default(uuid())
+  userId              String         @unique
+  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phkDate             DateTime
+  lastCompany         String
+  lastPosition        String
+  lastSalary          Int?
+  yearsOfService      Int?
+  phkReason           String?
+  currentStatus       RecoveryStatus @default(ASSESSMENT)
   targetMonthlyIncome Int?
-  urgencyLevel      Int            @default(3) // 1-5
-  financialRunway   Int?           // months of savings
-  dependents        Int            @default(0)
-  hasHealthInsurance Boolean       @default(false)
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  urgencyLevel        Int            @default(3) // 1-5
+  financialRunway     Int? // months of savings
+  dependents          Int            @default(0)
+  hasHealthInsurance  Boolean        @default(false)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
 
-  recoveryPlans     RecoveryPlan[]
+  recoveryPlans RecoveryPlan[]
 
   @@map("phk_profiles")
 }
 
 model RecoveryPlan {
-  id              String   @id @default(uuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  phkProfileId    String?
-  phkProfile      PHKProfile? @relation(fields: [phkProfileId], references: [id])
-  title           String
-  targetIncome    Int
-  timelineMonths  Int
-  paths           Json[]   // Array of RecoveryPath objects
-  currentPathIdx  Int      @default(0)
-  milestones      Json[]
-  status          RecoveryStatus @default(PLANNING)
-  startedAt       DateTime?
-  achievedAt      DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String         @id @default(uuid())
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phkProfileId   String?
+  phkProfile     PHKProfile?    @relation(fields: [phkProfileId], references: [id])
+  title          String
+  targetIncome   Int
+  timelineMonths Int
+  paths          Json[] // Array of RecoveryPath objects
+  currentPathIdx Int            @default(0)
+  milestones     Json[]
+  status         RecoveryStatus @default(PLANNING)
+  startedAt      DateTime?
+  achievedAt     DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
   @@map("recovery_plans")
 }
@@ -429,24 +430,24 @@ model RecoveryPlan {
 // ==========================================
 
 model RetirementProfile {
-  id                    String   @id @default(uuid())
-  userId                String   @unique
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  retirementDate        DateTime?
-  lastOrganization      String?
-  lastPosition          String?
-  totalYearsOfService   Int?
-  pensionMonthlyAmount  Int?
-  pensionProvider       String?  // TASPEN, ASABRI, BPJS
-  targetSecondIncome    Int?
-  healthStatus          String?
-  availableHoursPerWeek Int?
-  preferredWorkMode     String[] // remote, hybrid, onsite
-  expertiseDomains      String[]
-  knowledgeExtractionDone Boolean @default(false)
-  secondLifeStatus      String   @default("ASSESSMENT")
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id                      String    @id @default(uuid())
+  userId                  String    @unique
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  retirementDate          DateTime?
+  lastOrganization        String?
+  lastPosition            String?
+  totalYearsOfService     Int?
+  pensionMonthlyAmount    Int?
+  pensionProvider         String? // TASPEN, ASABRI, BPJS
+  targetSecondIncome      Int?
+  healthStatus            String?
+  availableHoursPerWeek   Int?
+  preferredWorkMode       String[] // remote, hybrid, onsite
+  expertiseDomains        String[]
+  knowledgeExtractionDone Boolean   @default(false)
+  secondLifeStatus        String    @default("ASSESSMENT")
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 
   @@map("retirement_profiles")
 }
@@ -473,31 +474,31 @@ model Opportunity {
   compensationMin   Int?
   compensationMax   Int?
   currency          String            @default("IDR")
-  compensationType  String?           // monthly, project, hourly, revenue_share
+  compensationType  String? // monthly, project, hourly, revenue_share
   demandScore       Float?
-  competitionLevel  String?           // LOW, MEDIUM, HIGH
-  timeToFirstIncome Int?              // days
+  competitionLevel  String? // LOW, MEDIUM, HIGH
+  timeToFirstIncome Int? // days
   confidenceScore   Float?
   expiresAt         DateTime?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
-  matches           OpportunityMatch[]
+  matches OpportunityMatch[]
 
   @@map("opportunities")
 }
 
 model OpportunityMatch {
-  id              String   @id @default(uuid())
+  id              String      @id @default(uuid())
   opportunityId   String
   opportunity     Opportunity @relation(fields: [opportunityId], references: [id])
   applicantUserId String
-  applicantUser   User     @relation("ApplicantUser", fields: [applicantUserId], references: [id])
+  applicantUser   User        @relation("ApplicantUser", fields: [applicantUserId], references: [id])
   matchScore      Float
   skillMatchPct   Float?
-  status          String   @default("PENDING")
-  appliedAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  status          String      @default("PENDING")
+  appliedAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
   @@unique([opportunityId, applicantUserId])
   @@map("opportunity_matches")
@@ -508,23 +509,23 @@ model OpportunityMatch {
 // ==========================================
 
 model KnowledgeAsset {
-  id            String             @id @default(uuid())
-  userId        String
-  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type          KnowledgeAssetType
-  title         String
-  description   String?
-  contentUrl    String?
-  priceIdr      Int?
-  isFree        Boolean            @default(false)
+  id             String             @id @default(uuid())
+  userId         String
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type           KnowledgeAssetType
+  title          String
+  description    String?
+  contentUrl     String?
+  priceIdr       Int?
+  isFree         Boolean            @default(false)
   targetAudience String[]
-  tags          String[]
-  publishedAt   DateTime?
-  viewCount     Int                @default(0)
-  purchaseCount Int                @default(0)
-  trustLevel    DataTrustLevel     @default(SELF_DECLARED)
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
+  tags           String[]
+  publishedAt    DateTime?
+  viewCount      Int                @default(0)
+  purchaseCount  Int                @default(0)
+  trustLevel     DataTrustLevel     @default(SELF_DECLARED)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 
   @@map("knowledge_assets")
 }
@@ -539,7 +540,7 @@ model AIWorkTask {
   assignedUser    User?      @relation(fields: [assignedUserId], references: [id])
   title           String
   description     String
-  category        String     // data_labeling, evaluation, translation, annotation, review
+  category        String // data_labeling, evaluation, translation, annotation, review
   requiredSkills  String[]
   compensationIdr Int
   estimatedHours  Float?
@@ -550,42 +551,72 @@ model AIWorkTask {
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
-  submissions     TaskSubmission[]
+  submissions TaskSubmission[]
 
   @@map("ai_work_tasks")
 }
 
+// ==============================
+// TASK (Buyer Evaluation)
+// ==============================
+model Task {
+  id        String   @id @default(uuid())
+  buyerId   String
+  prompt    String
+  modelAId  String?
+  responseA String?
+  modelBId  String?
+  responseB String?
+  category  String   @default("General")
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+}
+
+model Model {
+  id            String   @id @default(uuid())
+  name          String
+  provider      String
+  scoreGlobal   Float
+  scoreNatural  Float
+  scoreCulture  Float
+  scoreEmpathy  Float
+  scoreRegional Float
+  createdAt     DateTime @default(now())
+}
+
 model TaskSubmission {
-  id          String     @id @default(uuid())
-  taskId      String
-  task        AIWorkTask @relation(fields: [taskId], references: [id])
-  userId      String
-  user        User       @relation(fields: [userId], references: [id])
-  content     Json
-  notes       String?
-  status      TaskStatus @default(SUBMITTED)
-  reviewNotes String?
-  qualityScore Float?
-  submittedAt DateTime   @default(now())
-  reviewedAt  DateTime?
-
+  id            String         @id @default(uuid())
+  aiWorkTaskId  String?
+  aiWorkTask    AIWorkTask?    @relation(fields: [aiWorkTaskId], references: [id])
+  contributorId String
+  user          User           @relation(fields: [contributorId], references: [id])
+  result        Json
+  status        String         @default("SUBMITTED")
+  submittedAt   DateTime       @default(now())
   qualityScores QualityScore[]
+}
 
-  @@map("task_submissions")
+model Response {
+  id            String   @id @default(uuid())
+  taskId        String
+  contributorId String
+  preference    String
+  earnedCents   Int      @default(0)
+  createdAt     DateTime @default(now())
 }
 
 model QualityScore {
-  id             String         @id @default(uuid())
-  submissionId   String
-  submission     TaskSubmission @relation(fields: [submissionId], references: [id])
-  scorerType     String         // AI, HUMAN, EXPERT
-  scorerUserId   String?
-  accuracy       Float
-  completeness   Float
-  consistency    Float
-  overall        Float
-  feedback       String?
-  scoredAt       DateTime       @default(now())
+  id           String         @id @default(uuid())
+  submissionId String
+  submission   TaskSubmission @relation(fields: [submissionId], references: [id])
+  scorerType   String // AI, HUMAN, EXPERT
+  scorerUserId String?
+  accuracy     Float
+  completeness Float
+  consistency  Float
+  overall      Float
+  feedback     String?
+  scoredAt     DateTime       @default(now())
 
   @@map("quality_scores")
 }
@@ -595,52 +626,52 @@ model QualityScore {
 // ==========================================
 
 model Wallet {
-  id            String        @id @default(uuid())
-  userId        String        @unique
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  balanceIdr    Int           @default(0)
-  pendingIdr    Int           @default(0)
-  totalEarned   Int           @default(0)
-  totalWithdrawn Int          @default(0)
-  currency      String        @default("IDR")
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balanceIdr     Int      @default(0)
+  pendingIdr     Int      @default(0)
+  totalEarned    Int      @default(0)
+  totalWithdrawn Int      @default(0)
+  currency       String   @default("IDR")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  payouts       Payout[]
+  payouts Payout[]
 
   @@map("wallets")
 }
 
 model Transaction {
-  id              String            @id @default(uuid())
-  userId          String
-  user            User              @relation(fields: [userId], references: [id])
-  type            TransactionType
-  status          TransactionStatus @default(PENDING)
-  amountIdr       Int
-  description     String?
-  referenceId     String?           // task/opportunity/payout ID
-  referenceType   String?
-  metadata        Json?
-  createdAt       DateTime          @default(now())
-  completedAt     DateTime?
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id])
+  type          TransactionType
+  status        TransactionStatus @default(PENDING)
+  amountIdr     Int
+  description   String?
+  referenceId   String? // task/opportunity/payout ID
+  referenceType String?
+  metadata      Json?
+  createdAt     DateTime          @default(now())
+  completedAt   DateTime?
 
   @@map("transactions")
 }
 
 model Payout {
-  id              String   @id @default(uuid())
-  walletId        String
-  wallet          Wallet   @relation(fields: [walletId], references: [id])
-  amountIdr       Int
-  method          String   // bank_transfer, gopay, ovo, dana
-  accountNumber   String?
-  accountName     String?
-  bankCode        String?
-  status          String   @default("PENDING")
-  processedAt     DateTime?
-  failureReason   String?
-  createdAt       DateTime @default(now())
+  id            String    @id @default(uuid())
+  walletId      String
+  wallet        Wallet    @relation(fields: [walletId], references: [id])
+  amountIdr     Int
+  method        String // bank_transfer, gopay, ovo, dana
+  accountNumber String?
+  accountName   String?
+  bankCode      String?
+  status        String    @default("PENDING")
+  processedAt   DateTime?
+  failureReason String?
+  createdAt     DateTime  @default(now())
 
   @@map("payouts")
 }
@@ -650,55 +681,55 @@ model Payout {
 // ==========================================
 
 model DataSource {
-  id              String         @id @default(uuid())
-  name            String         @unique
-  type            DataSourceType
-  description     String?
-  baseUrl         String?
-  authType        String?        // api_key, oauth, none
-  licenseStatus   String?        // active, expired, pending
-  licenseExpiry   DateTime?
-  accessNote      String?
-  isActive        Boolean        @default(true)
-  lastFetchAt     DateTime?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  id            String         @id @default(uuid())
+  name          String         @unique
+  type          DataSourceType
+  description   String?
+  baseUrl       String?
+  authType      String? // api_key, oauth, none
+  licenseStatus String? // active, expired, pending
+  licenseExpiry DateTime?
+  accessNote    String?
+  isActive      Boolean        @default(true)
+  lastFetchAt   DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
-  ingestions      DataIngestion[]
+  ingestions DataIngestion[]
 
   @@map("data_sources")
 }
 
 model DataIngestion {
-  id              String            @id @default(uuid())
-  sourceId        String
-  source          DataSource        @relation(fields: [sourceId], references: [id])
-  endpoint        String?
-  parameters      Json?
-  rawPayload      Json?
-  status          DataQualityStatus @default(RAW)
-  recordCount     Int               @default(0)
-  errorMessage    String?
-  period          String?           // e.g. "2024-Q1"
-  fetchedAt       DateTime          @default(now())
-  processedAt     DateTime?
+  id           String            @id @default(uuid())
+  sourceId     String
+  source       DataSource        @relation(fields: [sourceId], references: [id])
+  endpoint     String?
+  parameters   Json?
+  rawPayload   Json?
+  status       DataQualityStatus @default(RAW)
+  recordCount  Int               @default(0)
+  errorMessage String?
+  period       String? // e.g. "2024-Q1"
+  fetchedAt    DateTime          @default(now())
+  processedAt  DateTime?
 
-  qualityRecords  DataQualityRecord[]
+  qualityRecords DataQualityRecord[]
 
   @@map("data_ingestions")
 }
 
 model DataQualityRecord {
-  id              String   @id @default(uuid())
-  ingestionId     String
-  ingestion       DataIngestion @relation(fields: [ingestionId], references: [id])
-  fieldName       String
-  issueType       String   // missing, format_error, outlier, duplicate
-  issueDetail     String?
-  rawValue        String?
-  resolvedValue   String?
-  resolvedAt      DateTime?
-  createdAt       DateTime @default(now())
+  id            String        @id @default(uuid())
+  ingestionId   String
+  ingestion     DataIngestion @relation(fields: [ingestionId], references: [id])
+  fieldName     String
+  issueType     String // missing, format_error, outlier, duplicate
+  issueDetail   String?
+  rawValue      String?
+  resolvedValue String?
+  resolvedAt    DateTime?
+  createdAt     DateTime      @default(now())
 
   @@map("data_quality_records")
 }
@@ -708,17 +739,17 @@ model DataQualityRecord {
 // ==========================================
 
 model AuditLog {
-  id          String      @id @default(uuid())
-  userId      String?
-  user        User?       @relation(fields: [userId], references: [id])
-  action      AuditAction
-  entity      String
-  entityId    String?
-  oldValues   Json?
-  newValues   Json?
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime    @default(now())
+  id        String      @id @default(uuid())
+  userId    String?
+  user      User?       @relation(fields: [userId], references: [id])
+  action    AuditAction
+  entity    String
+  entityId  String?
+  oldValues Json?
+  newValues Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime    @default(now())
 
   @@map("audit_logs")
 }
@@ -728,16 +759,16 @@ model AuditLog {
 // ==========================================
 
 model Consent {
-  id          String      @id @default(uuid())
-  userId      String
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type        ConsentType
-  granted     Boolean
-  version     String      @default("1.0")
-  grantedAt   DateTime?
-  revokedAt   DateTime?
-  ipAddress   String?
-  createdAt   DateTime    @default(now())
+  id        String      @id @default(uuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      ConsentType
+  granted   Boolean
+  version   String      @default("1.0")
+  grantedAt DateTime?
+  revokedAt DateTime?
+  ipAddress String?
+  createdAt DateTime    @default(now())
 
   @@map("consents")
 }
@@ -747,16 +778,78 @@ model Consent {
 // ==========================================
 
 model Notification {
-  id          String   @id @default(uuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type        String
-  title       String
-  body        String
-  data        Json?
-  isRead      Boolean  @default(false)
-  readAt      DateTime?
-  createdAt   DateTime @default(now())
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  data      Json?
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
 
   @@map("notifications")
+}
+
+// ================================
+// NEW MODELS: Subscription, Billing, Human‑Task
+// ================================
+
+enum PlanType {
+  FREE
+  STARTER
+  PRO
+  BUSINESS
+  ENTERPRISE
+}
+
+model Plan {
+  id           String         @id @default(uuid())
+  name         String
+  priceCents   Int
+  quota        Int // request quota per month
+  limit        Int // hard limit per month
+  type         PlanType       @default(FREE)
+  Subscription Subscription[]
+}
+
+model Subscription {
+  id        String     @id @default(uuid())
+  userId    String
+  planId    String
+  startDate DateTime   @default(now())
+  endDate   DateTime?
+  status    String     @default("ACTIVE")
+  user      User       @relation(fields: [userId], references: [id])
+  plan      Plan       @relation(fields: [planId], references: [id])
+  ApiUsage  ApiUsage[]
+}
+
+model ApiUsage {
+  id             String       @id @default(uuid())
+  subscriptionId String
+  endpoint       String
+  method         String
+  timestamp      DateTime     @default(now())
+  count          Int          @default(1)
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+}
+
+model HumanTask {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  rewardCents Int
+  status      String   @default("OPEN")
+  createdAt   DateTime @default(now())
+}
+
+model Contribution {
+  id            String   @id @default(uuid())
+  humanTaskId   String
+  contributorId String
+  result        Json
+  rewardGiven   Boolean  @default(false)
+  submittedAt   DateTime @default(now())
 }

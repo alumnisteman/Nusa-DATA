@@ -2,15 +2,123 @@ const express = require('express');
 const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
 const amqp = require('amqplib');
+const billingMiddleware = require('./middleware/billing');
+const enrichmentService = require('./services/enrichment');
 
 const crypto = require('crypto');
 
 const app = express();
+// Enable CORS for all origins (frontend may be served from different port)
+app.use(cors());
+// Parse JSON bodies for POST/PUT requests
+app.use(express.json());
 const prisma = new PrismaClient();
 const { OFFICIAL_BPS_DATA, REAL_OPPORTUNITY_SEED, scrapeAndIngestData } = require('./scraper');
 
-app.use(cors());
-app.use(express.json());
+// Apply billing middleware to protect API routes
+app.use(billingMiddleware);
+
+// Subscription routes
+app.get('/api/subscriptions/me', async (req, res) => {
+  const subscription = req.subscription;
+  if (!subscription) return res.status(404).json({ error: 'Subscription not found' });
+  res.json(subscription);
+});
+
+app.post('/api/subscriptions', async (req, res) => {
+  const { planId } = req.body;
+  const apiKey = req.headers['x-api-key']; // using apiKey as subscription id placeholder
+  try {
+    const sub = await prisma.subscription.create({
+      data: { id: apiKey || undefined, userId: req.body.userId, planId },
+    });
+    res.status(201).json(sub);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// API usage endpoint
+app.get('/api/usage', async (req, res) => {
+  try {
+    // Mengelompokkan penggunaan per bulan berdasarkan timestamp
+    const usageData = await prisma.apiUsage.groupBy({
+      by: ['timestamp'],
+      _sum: { count: true },
+    });
+    // Format data menjadi array { date, count }
+    const formatted = usageData.map(u => ({
+      date: u.timestamp.toISOString().split('T')[0],
+      count: u._sum.count || 0,
+    }));
+    res.json(formatted);
+  } catch (e) {
+    console.error('Error fetching API usage:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Enrichment endpoint
+app.post('/v1/enrich', async (req, res) => {
+  const { text } = req.body;
+  if (!text) return res.status(400).json({ error: 'text is required' });
+  try {
+    const result = await enrichmentService.enrichText(text);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Human‑Task Marketplace routes
+app.get('/api/human-tasks', async (req, res) => {
+  const tasks = await prisma.humanTask.findMany({ where: { status: 'OPEN' } });
+  res.json(tasks);
+});
+
+app.post('/api/human-tasks', async (req, res) => {
+  const { title, description, rewardCents } = req.body;
+  if (!title || !description || rewardCents == null) {
+    return res.status(400).json({ error: 'Missing fields' });
+  }
+  const task = await prisma.humanTask.create({ data: { title, description, rewardCents } });
+  res.status(201).json(task);
+});
+
+app.post('/api/human-tasks/:id/submit', async (req, res) => {
+  const { id } = req.params;
+  const { contributorId, result } = req.body;
+  if (!contributorId || !result) return res.status(400).json({ error: 'Missing contributorId or result' });
+  try {
+    const contribution = await prisma.contribution.create({
+      data: { humanTaskId: id, contributorId, result, rewardGiven: false },
+    });
+    // Credit wallet
+    const task = await prisma.humanTask.findUnique({ where: { id } });
+    await prisma.wallet.update({
+      where: { userId: contributorId },
+      data: { balanceIdr: { increment: task.rewardCents } },
+    });
+    // Record transaction
+    await prisma.transaction.create({
+      data: {
+        userId: contributorId,
+        type: 'EARNING',
+        status: 'COMPLETED',
+        amountIdr: task.rewardCents,
+        description: `Reward for human task ${id}`,
+        referenceId: contribution.id,
+        referenceType: 'HumanTask',
+      },
+    });
+    // Mark reward as given
+    await prisma.contribution.update({ where: { id: contribution.id }, data: { rewardGiven: true } });
+    res.json({ success: true, contribution });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 
 function hashPassword(password) {
     return crypto.createHash('sha256').update(password + (process.env.JWT_SECRET || 'secret')).digest('hex');
@@ -182,9 +290,23 @@ app.get('/api/buyer/stats', async (req, res) => {
 // GET: Leaderboard Model Arena
 app.get('/api/buyer/leaderboard', async (req, res) => {
     try {
-        const models = await prisma.model.findMany({
+        let models = await prisma.model.findMany({
             orderBy: { scoreGlobal: 'desc' }
         });
+
+        if (models.length === 0) {
+            // Auto-seed default LLM models for arena testing
+            await prisma.model.createMany({
+                data: [
+                    { name: "Claude 3.5 Sonnet", provider: "Anthropic", scoreGlobal: 92.4, scoreNatural: 94.1, scoreCulture: 95.8, scoreEmpathy: 91.5, scoreRegional: 93.0 },
+                    { name: "GPT-4o", provider: "OpenAI", scoreGlobal: 91.8, scoreNatural: 93.5, scoreCulture: 89.2, scoreEmpathy: 94.0, scoreRegional: 88.5 },
+                    { name: "Gemini 1.5 Pro", provider: "Google", scoreGlobal: 89.6, scoreNatural: 90.2, scoreCulture: 86.5, scoreEmpathy: 92.1, scoreRegional: 85.0 },
+                    { name: "Nusa-LLM 7B (Fine-Tuned)", provider: "NUSA AI", scoreGlobal: 87.5, scoreNatural: 95.0, scoreCulture: 96.2, scoreEmpathy: 88.0, scoreRegional: 97.5 }
+                ]
+            });
+            models = await prisma.model.findMany({ orderBy: { scoreGlobal: 'desc' } });
+        }
+
         res.json(models);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -218,6 +340,19 @@ app.post('/api/buyer/evaluations', async (req, res) => {
             }
         });
         res.json({ success: true, task });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET: Riwayat evaluasi buyer
+app.get('/api/buyer/evaluations', async (req, res) => {
+    try {
+        const tasks = await prisma.task.findMany({
+            orderBy: { createdAt: 'desc' },
+            take: 50
+        });
+        res.json(tasks);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

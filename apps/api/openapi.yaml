@@ -1,0 +1,244 @@
+openapi: 3.0.3
+info:
+  title: NUSA-DATA API
+  version: 1.0.0
+  description: API endpoint specifications for subscription, billing, enrichment, human-task marketplace, and buyer analytics.
+servers:
+  - url: https://api.nusa-data.id/v1
+    description: Production server
+paths:
+  /subscriptions:
+    get:
+      summary: Get current user's subscription
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Subscription details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+    post:
+      summary: Create a new subscription for a user
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewSubscription'
+      responses:
+        '201':
+          description: Subscription created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+  /api-usage:
+    get:
+      summary: Retrieve API usage statistics for the caller
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date-time
+          description: Start datetime (ISO8601)
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date-time
+          description: End datetime (ISO8601)
+      responses:
+        '200':
+          description: List of usage records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApiUsage'
+  /enrich:
+    post:
+      summary: Enrich raw job description text with structured data
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  description: Raw job description or title
+              required:
+                - text
+      responses:
+        '200':
+          description: Enriched data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrichmentResult'
+        '400':
+          description: Bad request
+  /human-tasks:
+    get:
+      summary: List open human tasks
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Array of human tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HumanTask'
+    post:
+      summary: Create a new human task
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewHumanTask'
+      responses:
+        '201':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HumanTask'
+  /human-tasks/{id}/submit:
+    post:
+      summary: Submit result for a human task
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                result:
+                  type: string
+                rewardCents:
+                  type: integer
+              required:
+                - result
+                - rewardCents
+      responses:
+        '200':
+          description: Submission accepted and wallet credited
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  schemas:
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        planId:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+    NewSubscription:
+      type: object
+      required:
+        - planId
+      properties:
+        planId:
+          type: string
+    ApiUsage:
+      type: object
+      properties:
+        id:
+          type: string
+        subscriptionId:
+          type: string
+        endpoint:
+          type: string
+        method:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        count:
+          type: integer
+    EnrichmentResult:
+      type: object
+      properties:
+        industry:
+          type: string
+        skills:
+          type: array
+          items:
+            type: string
+        seniority:
+          type: string
+        relatedRoles:
+          type: array
+          items:
+            type: string
+        salaryRange:
+          type: string
+        demandScore:
+          type: number
+        confidence:
+          type: number
+    HumanTask:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        rewardCents:
+          type: integer
+        status:
+          type: string
+    NewHumanTask:
+      type: object
+      required:
+        - title
+        - description
+        - rewardCents
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        rewardCents:
+          type: integer
