@@ -1,9 +1,9 @@
 'use client';
 import { useState } from 'react';
 
-export default function LoginPage() {
+export default function ResetPasswordPage() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ email: '', newPassword: '' });
   const [message, setMessage] = useState({ text: '', type: '' });
   const [loading, setLoading] = useState(false);
 
@@ -17,7 +17,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/login`, {
+      const res = await fetch(`${API_URL}/api/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
@@ -26,15 +26,12 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage({ text: '✅ Login berhasil! Mengalihkan...', type: 'success' });
-        if (data.token) {
-          localStorage.setItem('restart_token', data.token);
-        }
+        setMessage({ text: '✅ Password berhasil direset! Mengalihkan ke halaman login...', type: 'success' });
         setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 1000);
+          window.location.href = '/login';
+        }, 2000);
       } else {
-        setMessage({ text: data.error || 'Email atau password salah.', type: 'error' });
+        setMessage({ text: data.error || 'Gagal mereset password.', type: 'error' });
       }
     } catch (err) {
       setMessage({ text: 'Tidak dapat terhubung ke server.', type: 'error' });
@@ -50,15 +47,15 @@ export default function LoginPage() {
           <span>RESTART <span className="nav-logo-badge">AI</span></span>
         </div>
         <nav className="nav-links">
-          <a href="/" className="nav-link">← Kembali ke Beranda</a>
+          <a href="/login" className="nav-link">← Kembali ke Login</a>
         </nav>
       </header>
 
       <div className="auth-container">
         <div className="auth-card">
-          <h1 className="auth-title">Masuk ke RESTART AI</h1>
+          <h1 className="auth-title">Reset Password</h1>
           <p className="auth-subtitle">
-            Lanjutkan perjalanan karir Anda.
+            Buat password baru untuk akun Anda.
           </p>
 
           {message.text && (
@@ -83,28 +80,26 @@ export default function LoginPage() {
             </div>
 
             <div className="form-group">
-              <label className="form-label" htmlFor="password">Password</label>
+              <label className="form-label" htmlFor="newPassword">Password Baru</label>
               <input
-                id="password"
-                name="password"
+                id="newPassword"
+                name="newPassword"
                 type="password"
                 className="form-input"
-                value={form.password}
+                value={form.newPassword}
                 onChange={handleChange}
-                placeholder="Masukkan password Anda"
+                placeholder="Masukkan password baru Anda"
                 required
               />
             </div>
 
             <button type="submit" className="btn-full" disabled={loading}>
-              {loading ? 'Memproses...' : 'Masuk'}
+              {loading ? 'Memproses...' : 'Reset Password'}
             </button>
           </form>
 
           <div className="auth-switch">
-            Belum punya akun? <a href="/register">Daftar sekarang</a>
-            <br/><br/>
-            Lupa password? <a href="/reset-password">Reset di sini</a>
+            Ingat password Anda? <a href="/login">Masuk di sini</a>
           </div>
         </div>
       </div>

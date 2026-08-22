@@ -20,6 +20,7 @@ export default function ApiUsageChart() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Karena Nginx mem-proxy /api ke backend, gunakan fallback localhost:3001 untuk dev lokal
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
   useEffect(() => {

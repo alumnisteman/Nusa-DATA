@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 export default function Home() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -17,42 +18,48 @@ export default function Home() {
       title: 'PHK Recovery',
       desc: 'Analisis profil korban PHK, rencana pemulihan karir, dan rekomendasi pelatihan berbasis AI untuk transisi cepat ke peluang baru.',
       tags: ['Profil PHK', 'Recovery Plan', 'Skill Gap', 'Retraining'],
-      color: 'red'
+      color: 'red',
+      slug: 'phk-recovery'
     },
     {
       icon: '🟣',
       title: 'Retirement Engine',
       desc: 'Retirement countdown, ekstraksi pengalaman, penemuan karir kedua, mentoring, knowledge legacy, dan perencanaan pendapatan.',
       tags: ['Countdown', 'Second Career', 'Mentoring', 'Income Planning'],
-      color: 'purple'
+      color: 'purple',
+      slug: 'retirement-engine'
     },
     {
       icon: '🔵',
       title: 'Work DNA',
       desc: 'AI interview mendalam yang menganalisis career history, problem solving, leadership, communication, tools, achievements, dan domain knowledge.',
       tags: ['AI Interview', 'Skill Candidates', 'AI_ASSISTED'],
-      color: 'blue'
+      color: 'blue',
+      slug: 'work-dna'
     },
     {
       icon: '🟢',
       title: 'Experience Bank',
       desc: 'Simpan dan verifikasi pengalaman kerja nyata dengan Problem-Action-Result framework, evidence, dan verification status.',
       tags: ['PAR Framework', 'Evidence', 'Verified'],
-      color: 'green'
+      color: 'green',
+      slug: 'experience-bank'
     },
     {
       icon: '🟡',
       title: 'Opportunity Engine',
       desc: 'Penemuan peluang nyata: Job, Freelance, Business, Consulting, Mentoring, AI Work, dan Digital Product — semua dengan source tracking.',
       tags: ['Job', 'Business', 'AI Work', 'Source Tracking'],
-      color: 'amber'
+      color: 'amber',
+      slug: 'opportunity-engine'
     },
     {
       icon: '🔷',
       title: 'NUSA Integration',
       desc: 'Kualifikasi → Training → Simulasi → Sertifikasi → Task Marketplace → Human Evaluation → Quality Control → Payment.',
       tags: ['Training', 'Certification', 'QA', 'Payout'],
-      color: 'teal'
+      color: 'teal',
+      slug: 'nusa-integration'
     }
   ];
 
@@ -78,6 +85,8 @@ export default function Home() {
         <nav className="nav-links">
           <a href="/" className="nav-link active">Beranda</a>
           <a href="#fitur" className="nav-link">Fitur</a>
+          <a href="/bantuan" className="nav-link">Bantuan</a>
+          <a href="/dokumentasi" className="nav-link">Dokumentasi</a>
           <a href="#arsitektur" className="nav-link">Arsitektur</a>
           <a href="#data" className="nav-link">Data Pipeline</a>
           <a href="/register" className="nav-cta">Mulai Sekarang →</a>
@@ -141,16 +150,18 @@ export default function Home() {
         </div>
         <div className="features-grid">
           {features.map((f, i) => (
-            <div key={i} className={`feature-card ${f.color}`}>
-              <div className="feature-icon">{f.icon}</div>
-              <h3 className="feature-title">{f.title}</h3>
-              <p className="feature-desc">{f.desc}</p>
-              <div className="feature-tags">
-                {f.tags.map((tag, j) => (
-                  <span key={j} className="feature-tag">{tag}</span>
-                ))}
+            <Link key={i} href={`/fitur/${f.slug}`} className="feature-card-link">
+              <div className={`feature-card ${f.color}`}>
+                <div className="feature-icon">{f.icon}</div>
+                <h3 className="feature-title">{f.title}</h3>
+                <p className="feature-desc">{f.desc}</p>
+                <div className="feature-tags">
+                  {f.tags.map((tag, j) => (
+                    <span key={j} className="feature-tag">{tag}</span>
+                  ))}
+                </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </section>
@@ -267,8 +278,9 @@ export default function Home() {
           © 2026 RESTART AI — Platform Pemulihan & Akselerasi Karir Indonesia
         </p>
         <div className="footer-links">
-          <a href="#" className="footer-link">Privacy Policy</a>
-          <a href="#" className="footer-link">Terms of Service</a>
+          <a href="#" className="footer-link">Kebijakan Privasi</a>
+          <a href="#" className="footer-link">Ketentuan Layanan</a>
+          <a href="/bantuan" className="footer-link">Bantuan</a>
           <a href="#" className="footer-link">Kontak</a>
         </div>
       </footer>

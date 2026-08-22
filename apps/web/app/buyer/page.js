@@ -22,8 +22,8 @@ export default function BuyerDashboard() {
   const [activeTab, setActiveTab] = useState('leaderboard');
   const [evaluations, setEvaluations] = useState([]);
 
-  // Karena Nginx mem-proxy /api ke backend, gunakan empty string atau '/' agar request mengarah ke port yang sama (80)
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+  // Karena Nginx mem-proxy /api ke backend, gunakan fallback localhost:3001 untuk dev lokal
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
   const fetchData = useCallback(async () => {
     setLoading(true);

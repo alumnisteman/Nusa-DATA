@@ -46,8 +46,9 @@ services:
           memory: 256M
 
   api:
-    environment:
-      NODE_ENV: production
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
     ports: []
     deploy:
       resources:
@@ -64,7 +65,9 @@ services:
         max-file: "3"
 
   web:
-    ports: []
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
     deploy:
       resources:
         limits:
@@ -80,7 +83,9 @@ services:
         max-file: "3"
 
   admin:
-    ports: []
+    build:
+      context: ./apps/admin
+      dockerfile: Dockerfile
     deploy:
       resources:
         limits:
@@ -96,7 +101,9 @@ services:
         max-file: "3"
 
   ai-worker:
-    deploy:
+    build:
+      context: ./workers/ai-worker
+      dockerfile: Dockerfile
       resources:
         limits:
           cpus: '1.5'
@@ -111,7 +118,9 @@ services:
         max-file: "3"
 
   data-worker:
-    deploy:
+    build:
+      context: ./workers/data-worker
+      dockerfile: Dockerfile
       resources:
         limits:
           cpus: '1.5'
@@ -126,7 +135,9 @@ services:
         max-file: "3"
 
   notification-worker:
-    deploy:
+    build:
+      context: ./workers/notification-worker
+      dockerfile: Dockerfile
       resources:
         limits:
           cpus: '0.5'
