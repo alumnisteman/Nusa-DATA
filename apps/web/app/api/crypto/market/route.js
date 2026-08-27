@@ -49,7 +49,7 @@ export async function GET() {
     const seenExchanges = new Set()
     const quotes = (bitcoinTickers.tickers || [])
       .filter((ticker) => ticker.target?.toUpperCase() === 'IDR' && Number.isFinite(Number(ticker.last)))
-      .sort((a, b) => Number(b.converted_volume?.usd || 0) - Number(a converted_volume?.usd || 0))
+      .sort((a, b) => Number(b.converted_volume?.usd || 0) - Number(a.converted_volume?.usd || 0))
       .map((ticker) => ({
         exchange: cleanExchangeName(ticker.market?.name || ticker.market?.identifier || 'Unknown'),
         price: Number(ticker.last),
