@@ -1419,3 +1419,15 @@ Lakukan registrasi dengan akun nyata.
 8. Jangan jalankan dummy seed.
 9. Jangan menampilkan statistik tanpa source.
 10. Jangan menyimpan data pribadi yang tidak diperlukan.
+
+
+## NUSA Crypto Intelligence
+
+NUSA Crypto Intelligence adalah modul Phase 1 untuk market intelligence crypto Indonesia. Modul ini berjalan di route /crypto dan menyediakan:
+
+- market snapshot BTC, ETH, dan SOL dalam IDR;
+- perbandingan ticker BTC/IDR lintas exchange publik;
+- indikator spread observasi dengan ambang pemantauan 0,30%;
+- intelligence feed, roadmap produk, dan rancangan monetisasi freemium/B2B.
+
+Data diambil server-side melalui endpoint CoinGecko agar kredensial tidak berada di browser. Modul ini read-only: tidak mengeksekusi order dan tidak memberikan nasihat keuangan. Jika upstream tidak tersedia, endpoint mengembalikan status degraded dan UI tidak menampilkan angka fallback.
