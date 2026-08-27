@@ -69,7 +69,7 @@ services:
     container_name: restart-meilisearch
     restart: unless-stopped
     environment:
-      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-changeme}
+      MEILI_MASTER_KEY: supersecuremasterkey1234567890ABCD
       MEILI_ENV: production
     volumes:
       - meilisearch_data:/meili_data
@@ -82,6 +82,7 @@ services:
       retries: 5
 
   api:
+
     build:
       context: .
       dockerfile: apps/api/Dockerfile
@@ -97,8 +98,8 @@ services:
       JWT_SECRET: ${JWT_SECRET:-changeme}
       SESSION_SECRET: ${SESSION_SECRET:-changeme}
       AI_PROVIDER: ${AI_PROVIDER:-openai}
-      AI_API_KEY: ${AI_API_KEY}
-      BPS_API_KEY: ${BPS_API_KEY}
+      AI_API_KEY: mock_ai_key
+      BPS_API_KEY: mock_bps_key
       BPS_API_URL: ${BPS_API_URL:-https://webapi.bps.go.id/v1/}
     depends_on:
       postgres:
@@ -170,7 +171,7 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://nusa_admin:nusa_password@postgres:5432/restart_ai?schema=public}
       RABBITMQ_URL: ${RABBITMQ_URL:-amqp://restart:changeme@rabbitmq:5672}
-      BPS_API_KEY: ${BPS_API_KEY}
+      BPS_API_KEY: mock_bps_key
       BPS_API_URL: ${BPS_API_URL:-https://webapi.bps.go.id/v1/}
     depends_on:
       postgres:

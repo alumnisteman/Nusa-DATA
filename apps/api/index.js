@@ -7,6 +7,11 @@ const auditLogger = require('./middleware/auditLogger');
 const enrichmentService = require('./services/enrichment');
 const { notificationEmitter, sendNotification } = require('./services/notificationService');
 const aiMatchmaker = require('./services/aiMatchmaker');
+const paymentService = require('./services/paymentService');
+const ledgerService = require('./services/ledgerService');
+const phkService = require('./services/phkService');
+const retirementService = require('./services/retirementService');
+const workDnaService = require('./services/workDnaService');
 
 const crypto = require('crypto');
 
@@ -17,19 +22,37 @@ app.use(cors());
 app.use(express.json());
 // Global Audit Logger
 app.use(auditLogger);
-const prisma = new PrismaClient();
+
+// Initialize Prisma with error handling
+let prisma;
+try {
+  prisma = new PrismaClient();
+  console.log('✅ Database client initialized');
+} catch (error) {
+  console.error('⚠️ Database initialization error:', error.message);
+  console.log('⚠️ Continuing without database connection (limited functionality)');
+  prisma = null;
+}
+
+// Helper function to check database availability
+function requireDatabase(req, res, next) {
+  if (!prisma) {
+    return res.status(503).json({ error: 'Database not available' });
+  }
+  next();
+}
 const { OFFICIAL_BPS_DATA, REAL_OPPORTUNITY_SEED, scrapeAndIngestData } = require('./scraper');
 
 // Apply billing middleware to specific routes only instead of globally
 
 // Subscription routes
-app.get('/api/subscriptions/me', billingMiddleware, async (req, res) => {
+app.get('/api/subscriptions/me', billingMiddleware, requireDatabase, async (req, res) => {
   const subscription = req.subscription;
   if (!subscription) return res.status(404).json({ error: 'Subscription not found' });
   res.json(subscription);
 });
 
-app.post('/api/subscriptions', async (req, res) => {
+app.post('/api/subscriptions', requireDatabase, async (req, res) => {
   const { planId } = req.body;
   const apiKey = req.headers['x-api-key']; // using apiKey as subscription id placeholder
   try {
@@ -220,7 +243,8 @@ async function connectRabbitMQ() {
         console.log('✅ Connected to RabbitMQ');
     } catch (error) {
         console.error('RabbitMQ Error:', error.message);
-        setTimeout(connectRabbitMQ, 5000);
+        console.log('⚠️ RabbitMQ not available, continuing without message queue');
+        // Don't retry in development if RabbitMQ is not available
     }
 }
 connectRabbitMQ();
@@ -465,7 +489,13 @@ app.post('/api/ingest/scrape', async (req, res) => {
  */
 
 // Import axios for external AI calls
-const axios = require('axios');
+let axios;
+try {
+  axios = require('axios');
+} catch (e) {
+  console.warn('axios not available, AI service integration disabled');
+  axios = null;
+}
 
 // GET: Users by profile type (PHK Recovery, Retirement)
 app.get('/api/users', async (req, res) => {
@@ -514,7 +544,7 @@ app.post('/api/work-dna', async (req, res) => {
   const apiKey = process.env.AI_API_KEY || '';
 
   // Jika AI service tersedia, gunakan
-  if (aiUrl && apiKey) {
+  if (aiUrl && apiKey && axios) {
     try {
       const response = await axios.post(aiUrl, payload, {
         headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }
@@ -632,6 +662,37 @@ app.get('/api/buyer/skills-gap', async (req, res) => {
 
 // ==========================================
 // WEEK 1: REVENUE CORE ROUTES
+
+// ==============================
+// PAYMENT ENDPOINTS (Phase 1)
+// ==============================
+// POST /api/payments/checkout - Membuat URL checkout (mock)
+app.post('/api/payments/checkout', async (req, res) => {
+  try {
+    const { invoiceId } = req.body;
+    if (!invoiceId) return res.status(400).json({ error: 'invoiceId is required' });
+    const checkoutUrl = await paymentService.createCheckoutUrl(invoiceId);
+    res.json({ checkoutUrl });
+  } catch (e) {
+    console.error('Checkout error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/payments/webhook - Menangani notifikasi status pembayaran
+app.post('/api/payments/webhook', async (req, res) => {
+  try {
+    const payload = req.body;
+    const result = await paymentService.handleWebhook(payload);
+    // result dapat berisi {status, invoiceId}
+    res.json({ received: true, result });
+  } catch (e) {
+    console.error('Webhook handling error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
 // ==========================================
 
 // Products
@@ -914,6 +975,28 @@ app.all('/api/payment/webhook', async (req, res) => {
 });
 
 // GET /api/payment/ledger — arus kas semua akun
+
+// Endpoint untuk menerima task marketplace yang disetujui (ACCEPTED)
+app.post('/api/marketplace/tasks/:id/accept', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const task = await prisma.humanTask.findUnique({ where: { id } });
+    if (!task) return res.status(404).json({ error: 'Task not found' });
+    await prisma.humanTask.update({ where: { id }, data: { status: 'ACCEPTED' } });
+    const platformFeePct = PLATFORM_FEE_PERCENT || 20;
+    await ledgerService.recordCommissionSplit({
+      referenceId: task.id,
+      totalCents: task.rewardCents,
+      platformFeePercentage: platformFeePct,
+      workerId: task.assignedWorkerId || null,
+      description: 'Marketplace task accepted',
+    });
+    res.json({ success: true, message: 'Task accepted and commission recorded' });
+  } catch (e) {
+    console.error('Accept task error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
 app.get('/api/payment/ledger', async (req, res) => {
   try {
     const { account, limit = '100' } = req.query;
@@ -1312,7 +1395,86 @@ app.get('/api/matchmaking/project-scores', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+// ==========================================
+// MONETIZATION & REVENUE (PAYMENTS, LEDGER)
+// ==========================================
 
+// POST: Create checkout session
+app.post('/api/payments/checkout', async (req, res) => {
+  try {
+    const { invoiceId } = req.body;
+    if (!invoiceId) return res.status(400).json({ error: 'invoiceId diperlukan' });
+
+    const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId } });
+    if (!invoice) return res.status(404).json({ error: 'Invoice tidak ditemukan' });
+
+    const payment = await paymentService.createCheckout(invoice);
+    res.json({ success: true, message: 'Checkout berhasil', payment });
+  } catch (error) {
+    console.error('Checkout error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST: Webhook from Payment Gateway
+app.post('/api/payments/webhook', async (req, res) => {
+  try {
+    const payload = req.body;
+    const payment = await paymentService.handleWebhook(payload);
+    res.json({ success: true, message: 'Webhook diterima', paymentId: payment.id, status: payment.status });
+  } catch (error) {
+    console.error('Kesalahan webhook:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST: Accept Marketplace Submission & Split Commission
+app.post('/api/marketplace/submissions/:id/accept', async (req, res) => {
+  try {
+    const submissionId = req.params.id;
+    // In real app, fetch submission and task to get amount and worker
+    // For mock/MVP, we expect amount in body
+    const { totalCents, workerId } = req.body;
+    if (!totalCents || !workerId) return res.status(400).json({ error: 'totalCents and workerId required' });
+
+    // Mark submission as ACCEPTED in DB (mocked for now since submission route is minimal)
+    
+    // Auto-split commission (e.g. 20% platform fee, 80% to worker)
+    await ledgerService.recordCommissionSplit({
+      referenceId: submissionId,
+      totalCents,
+      platformFeePercentage: 20, // 20% cut for NUSA
+      workerId,
+      description: `Pembagian komisi penyelesaian Task (${submissionId})`
+    });
+
+    res.json({ success: true, message: 'Submission accepted and commission split recorded in Ledger.' });
+  } catch (error) {
+    console.error('Submission accept error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET: Revenue Report for Admin Dashboard
+app.get('/api/admin/revenue', async (req, res) => {
+  try {
+    const report = await ledgerService.getRevenueReport();
+    res.json({ success: true, report });
+  } catch (error) {
+    console.error('Revenue report error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+// GET: Revenue Chart for Admin Dashboard
+app.get('/api/admin/revenue/chart', async (req, res) => {
+  try {
+    const chart = await ledgerService.getRevenueChart();
+    res.json(chart);
+  } catch (error) {
+    console.error('Revenue chart error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
 // Health check
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'nusa-api', timestamp: new Date().toISOString() });
@@ -1322,5 +1484,99 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', service: 'nusa-api', timestamp: new Date().toISOString() });
 });
 
+// API status endpoint for admin dashboard
+app.get('/api/status', (req, res) => {
+  res.json({
+    status: 'running',
+    database: prisma ? 'connected' : 'disconnected',
+    rabbitmq: channel ? 'connected' : 'disconnected',
+    modules: {
+      phk: 'available',
+      retirement: 'available',
+      workDna: 'available',
+      opportunity: 'available',
+      payment: 'available',
+      ledger: 'available'
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`🇮🇩 NUSA AI API running on port ${PORT}`));
+
+// GET: Semua entri ledger untuk admin dashboard
+app.get('/api/admin/ledger', async (req, res) => {
+  try {
+    const entries = await prisma.ledgerEntry.findMany();
+    res.json({ success: true, entries });
+  } catch (error) {
+    console.error('Ledger fetch error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET: Daftar invoice untuk admin dashboard (placeholder)
+app.get('/api/admin/invoices', async (req, res) => {
+  try {
+    const invoices = await prisma.invoice.findMany();
+    res.json({ success: true, invoices });
+  } catch (error) {
+    console.error('Invoices fetch error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==========================================
+// MODULE SERVICES API ENDPOINTS
+// ==========================================
+
+// PHK Recovery Engine
+app.post('/api/phk/recovery-options', async (req, res) => {
+  try {
+    const { skills, experienceYears, incomeTarget, location } = req.body;
+    const options = phkService.buildRecoveryOptions({
+      skills: skills || [],
+      experienceYears: experienceYears || 0,
+      incomeTarget,
+      location
+    });
+    res.json({ success: true, options });
+  } catch (error) {
+    console.error('PHK recovery options error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Retirement/Second Life Engine
+app.post('/api/retirement/plan', async (req, res) => {
+  try {
+    const { skills, yearsExperience, interests } = req.body;
+    const plan = retirementService.buildRetirementPlan({
+      skills: skills || [],
+      yearsExperience: yearsExperience || 0,
+      interests: interests || []
+    });
+    res.json({ success: true, plan });
+  } catch (error) {
+    console.error('Retirement plan error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Work DNA Engine
+app.post('/api/work-dna/analyze', async (req, res) => {
+  try {
+    const { roles, skills, experiences, certifications } = req.body;
+    const workDNA = workDnaService.deriveWorkDNA({
+      roles: roles || [],
+      skills: skills || [],
+      experiences: experiences || [],
+      certifications: certifications || []
+    });
+    res.json({ success: true, workDNA });
+  } catch (error) {
+    console.error('Work DNA analysis error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});

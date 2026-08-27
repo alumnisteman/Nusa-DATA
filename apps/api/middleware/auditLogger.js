@@ -27,8 +27,9 @@ const auditLogger = async (req, res, next) => {
             data: {
               userId: userId || undefined,
               action: actionMap[method] || 'UPDATE',
-              entityId: req.originalUrl,
-              details: {
+              entity: req.originalUrl,
+              entityId: null,
+              newValues: {
                 url: req.originalUrl,
                 ip: req.ip || req.connection?.remoteAddress,
                 userAgent: req.headers['user-agent']

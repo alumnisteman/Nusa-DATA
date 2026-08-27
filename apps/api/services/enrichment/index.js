@@ -1,12 +1,17 @@
 // services/enrichment/index.js
-const axios = require('axios');
+let axios;
+try {
+  axios = require('axios');
+} catch (e) {
+  console.warn('axios not available, using fallback responses only');
+}
 
 // Simple wrapper around HuggingFace Inference API (replace with actual token)
 const HF_API_TOKEN = process.env.HF_API_TOKEN || '';
 const HF_API_URL = 'https://api-inference.huggingface.co/models/nlp-community/bert-base-indonesian-uncased';
 
 async function enrichText(text) {
-  if (!HF_API_TOKEN) {
+  if (!HF_API_TOKEN || !axios) {
     // Fallback mock response
     return {
       industry: 'Technology',

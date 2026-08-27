@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Chart from 'chart.js/auto';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -18,26 +19,34 @@ function formatIDR(cents) {
 }
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState('revenue');
+  const [activeTab, setActiveTab] = useState('monetization');
   const [stats, setStats]         = useState({ totalRevenue: 0, paidInvoicesCount: 0 });
   const [invoices, setInvoices]   = useState([]);
   const [ledger, setLedger]       = useState({ entries: [], summary: {} });
   const [auditLogs, setAuditLogs] = useState([]);
+  const [monetization, setMonetization] = useState(null);
+  const [chartData, setChartData] = useState(null);
   const [loading, setLoading]     = useState(true);
 
   useEffect(() => {
     async function fetchAll() {
       try {
-        const [statsRes, invoicesRes, ledgerRes, auditRes] = await Promise.allSettled([
-          axios.get(`${API_URL}/api/revenue/dashboard-stats`),
-          axios.get(`${API_URL}/api/revenue/invoices`),
-          axios.get(`${API_URL}/api/payment/ledger`),
-          axios.get(`${API_URL}/api/admin/audit-logs`)
+        const [reportRes, ledgerRes, auditRes, invoicesRes, chartRes] = await Promise.allSettled([
+          axios.get(`${API_URL}/api/admin/revenue`),
+          axios.get(`${API_URL}/api/admin/ledger`),
+          axios.get(`${API_URL}/api/admin/audit-logs`),
+          axios.get(`${API_URL}/api/admin/invoices`),
+          axios.get(`${API_URL}/api/admin/revenue/chart`)
         ]);
-        if (statsRes.status   === 'fulfilled') setStats(statsRes.value.data);
-        if (invoicesRes.status === 'fulfilled') setInvoices(invoicesRes.value.data);
-        if (ledgerRes.status  === 'fulfilled') setLedger(ledgerRes.value.data);
+        if (reportRes.status === 'fulfilled') {
+          const r = reportRes.value.data.report;
+          setStats({ totalRevenue: r.totalNetRevenueCents, paidInvoicesCount: 0 });
+          setMonetization(r);
+        }
+        if (ledgerRes.status === 'fulfilled') setLedger(ledgerRes.value.data);
         if (auditRes.status === 'fulfilled') setAuditLogs(auditRes.value.data);
+        if (invoicesRes.status === 'fulfilled') setInvoices(invoicesRes.value.data);
+        if (chartRes.status === 'fulfilled') setChartData(chartRes.value.data);
       } catch (e) {
         console.error('Admin fetch error', e);
       } finally {
@@ -46,6 +55,50 @@ export default function AdminPage() {
     }
     fetchAll();
   }, []);
+
+  // Render chart when data is ready
+  useEffect(() => {
+    if (!chartData) return;
+    const ctx = document.getElementById('revenueChart')?.getContext('2d');
+    if (!ctx) return;
+    // Destroy previous chart if exists
+    const existingChart = Chart.getChart('revenueChart');
+    if (existingChart) existingChart.destroy();
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: chartData.map(d => d.month),
+        datasets: [
+          {
+            label: 'MRR',
+            data: chartData.map(d => d.mrrCents / 100),
+            borderColor: '#22c55e',
+            backgroundColor: 'rgba(34,197,94,0.2)',
+            tension: 0.3,
+          },
+          {
+            label: 'Komisi Platform',
+            data: chartData.map(d => d.commissionCents / 100),
+            borderColor: '#a78bfa',
+            backgroundColor: 'rgba(168,139,250,0.2)',
+            tension: 0.3,
+          },
+          {
+            label: 'Payout Worker',
+            data: chartData.map(d => d.workerPayoutCents / 100),
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56,189,248,0.2)',
+            tension: 0.3,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'top', labels: { color: '#f8fafc' } }, tooltip: { mode: 'index', intersect: false } },
+        scales: { x: { ticks: { color: '#f8fafc' } }, y: { ticks: { color: '#f8fafc' }, beginAtZero: true } }
+      }
+    });
+  }, [chartData]);
 
   const tab = (id, label) => (
     <button
@@ -88,14 +141,73 @@ export default function AdminPage() {
       </div>
 
       {/* Tabs */}
-      <div style={{ borderBottom: '1px solid #334155', marginBottom: '24px' }}>
-        {tab('revenue', '💰 Invoice & Revenue')}
+      <div style={{ borderBottom: '1px solid #334155', marginBottom: '24px', display: 'flex', gap: '4px', overflowX: 'auto' }}>
+        {tab('monetization', '💎 Monetization & Revenue')}
+        {tab('revenue', '🧾 Invoices')}
         {tab('ledger',  '📒 Ledger / Cashflow')}
         {tab('compliance', '🛡️ Compliance & Audit')}
       </div>
 
       {loading ? <p style={{ color: '#64748b' }}>Memuat data...</p> : (
         <>
+          {/* Tab: Monetization */}
+          {activeTab === 'monetization' && monetization && (
+            <div>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '20px' }}>6 Streams of Revenue Analytics</h2>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+                <div style={{ background: '#1e293b', padding: '24px', borderRadius: '12px', border: '1px solid #334155' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ fontSize: '1.1rem', margin: 0, color: '#f8fafc' }}>Total Net Revenue</h3>
+                    <span style={{ fontSize: '1.5rem' }}>💎</span>
+                  </div>
+                  <div style={{ fontSize: '2.5rem', fontWeight: 800, color: '#22c55e', margin: '12px 0' }}>
+                    {formatIDR(monetization.totalNetRevenueCents)}
+                  </div>
+                  <p style={{ margin: 0, color: '#64748b', fontSize: '0.85rem' }}>Total pendapatan bersih platform (MRR + Komisi)</p>
+                </div>
+
+                <div style={{ background: '#1e293b', padding: '24px', borderRadius: '12px', border: '1px solid #334155' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ fontSize: '1.1rem', margin: 0, color: '#f8fafc' }}>Monthly Recurring (MRR)</h3>
+                    <span style={{ fontSize: '1.5rem' }}>🔄</span>
+                  </div>
+                  <div style={{ fontSize: '2rem', fontWeight: 800, color: '#38bdf8', margin: '12px 0' }}>
+                    {formatIDR(monetization.mrrCents)}
+                  </div>
+                  <p style={{ margin: 0, color: '#64748b', fontSize: '0.85rem' }}>Dari B2C Premium & B2B Enterprise</p>
+                </div>
+
+                <div style={{ background: '#1e293b', padding: '24px', borderRadius: '12px', border: '1px solid #334155' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ fontSize: '1.1rem', margin: 0, color: '#f8fafc' }}>Platform Commission</h3>
+                    <span style={{ fontSize: '1.5rem' }}>🤝</span>
+                  </div>
+                  <div style={{ fontSize: '2rem', fontWeight: 800, color: '#a78bfa', margin: '12px 0' }}>
+                    {formatIDR(monetization.commissionCents)}
+                  </div>
+                  <p style={{ margin: 0, color: '#64748b', fontSize: '0.85rem' }}>Dari Marketplace, AI Task Margin & Knowledge Legacy</p>
+                </div>
+              </div>
+
+              <div style={{ background: '#1e293b', padding: '24px', borderRadius: '12px', border: '1px solid #334155' }}>
+                <h3 style={{ fontSize: '1.2rem', marginBottom: '16px' }}>Distribusi ke Ekosistem (Payout)</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ color: '#64748b' }}>Pekerja / Freelancer (Worker Wallet)</span>
+                      <span style={{ fontWeight: 700, color: '#f8fafc' }}>{formatIDR(monetization.workerPayoutCents)}</span>
+                    </div>
+                    <div style={{ height: '12px', background: '#334155', borderRadius: '100px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: monetization.workerPayoutCents > 0 ? '70%' : '0%', background: '#f59e0b', borderRadius: '100px' }}></div>
+                    </div>
+                  </div>
+                </div>
+                <p style={{ color: '#64748b', fontSize: '0.85rem', marginTop: '16px' }}>Total uang yang telah dicairkan atau dikreditkan ke dompet pekerja ekosistem NUSA-DATA.</p>
+              </div>
+            </div>
+          )}
+
           {/* Tab: Invoice & Revenue */}
           {activeTab === 'revenue' && (
             <>
