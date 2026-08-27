@@ -89,6 +89,7 @@ export default function Home() {
           <a href="/dokumentasi" className="nav-link">Dokumentasi</a>
           <a href="#arsitektur" className="nav-link">Arsitektur</a>
           <a href="#data" className="nav-link">Data Pipeline</a>
+          <a href="/crypto" className="nav-link">NUSA Crypto</a>
           <a href="/register" className="nav-cta">Mulai Sekarang →</a>
         </nav>
       </header>
