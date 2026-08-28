@@ -198,7 +198,7 @@ def create_analysis(data: AnalysisIn):
         {"item":"KBLI selection","status":"REVIEW"},
         {"item":"Location/RDTR","status":"REVIEW"},
         {"item":"Supporting documents","status":"REVIEW"},
-        {"item":"Sector-specific requirements","status":"REVIEW"}
+        {"item":"Sector-specific requirements","status":"Datanya harus sesuai dengan KBLI di OSS"}
       ],
       "disclaimer":"Decision-support only. This result is not a guarantee of NIB, OSS, RDTR, or other licensing approval."
     }
