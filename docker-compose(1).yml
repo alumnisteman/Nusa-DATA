@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nusa_oss
+      POSTGRES_USER: nusa
+      POSTGRES_PASSWORD: nusa_dev_password_change_me
+    volumes:
+      - nusa_oss_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nusa -d nusa_oss"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://nusa:nusa_dev_password_change_me@db:5432/nusa_oss
+      APP_ENV: production
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_BASE_URL: ${AI_BASE_URL:-}
+      AI_MODEL: ${AI_MODEL:-}
+    ports:
+      - "8080:8080"
+    volumes:
+      - nusa_oss_reports:/app/reports
+
+volumes:
+  nusa_oss_db:
+  nusa_oss_reports:
