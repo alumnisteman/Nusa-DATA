@@ -1,4 +1,56 @@
-# RESTART AI — Production Deployment
+# NUSA OSS Copilot
+
+[![CI](https://github.com/alumnisteman/Nusa-DATA/actions/workflows/ci.yml/badge.svg)](https://github.com/alumnisteman/Nusa-DATA/actions/workflows/ci.yml)
+[![Docker Hub](https://img.shields.io/docker/pulls/alumnisteman/nusa-data.svg)](https://hub.docker.com/r/alumnisteman/nusa-data)
+
+## Overview
+NUSA OSS Copilot is a FastAPI based decision‑support tool for Business Licensing (OSS). It matches business descriptions to KBLI codes, calculates a readiness score and provides a checklist.
+
+## Prerequisites
+- Docker & Docker Compose
+- Python 3.12 (optional for local development)
+- PostgreSQL (handled via Docker)
+
+## Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/alumnisteman/Nusa-DATA.git
+   cd Nusa-DATA
+   ```
+2. Copy the example environment file and adjust if needed:
+   ```bash
+   cp .env.example .env
+   ```
+3. Build and start the containers:
+   ```bash
+   docker compose up -d --build
+   ```
+
+The API will be available at `http://localhost:8080`.
+
+## Updating
+Pull the latest changes and redeploy:
+```bash
+git pull origin main
+docker compose pull
+docker compose up -d --build
+```
+
+## Maintenance
+- **Logs**: `docker compose logs -f` or `docker compose logs <service>`
+- **Database migrations** (if the schema changes):
+  ```bash
+  docker compose run --rm api npx prisma migrate deploy
+  ```
+- **Backup**: Use `docker exec` to dump the PostgreSQL database.
+
+## Documentation
+- API reference: see `api_docs.md`.
+- Contribution guide: see `CONTRIBUTING.md`.
+
+## License
+MIT
+
 
 [![CI](https://github.com/alumnisteman/Nusa-DATA/actions/workflows/ci.yml/badge.svg)](https://github.com/alumnisteman/Nusa-DATA/actions/workflows/ci.yml)
 [![Docker Hub](https://img.shields.io/docker/pulls/alumnisteman/nusa-data.svg)](https://hub.docker.com/r/alumnisteman/nusa-data)
