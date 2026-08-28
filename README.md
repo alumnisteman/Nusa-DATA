@@ -1,5 +1,9 @@
 # RESTART AI — Production Deployment
 
+[![CI](https://github.com/alumnisteman/Nusa-DATA/actions/workflows/ci.yml/badge.svg)](https://github.com/alumnisteman/Nusa-DATA/actions/workflows/ci.yml)
+[![Docker Hub](https://img.shields.io/docker/pulls/alumnisteman/nusa-data.svg)](https://hub.docker.com/r/alumnisteman/nusa-data)
+
+
 > Human Capital Recovery & Second-Life OS
 
 Platform untuk karyawan terdampak PHK, calon pensiunan, pensiunan, dan organisasi yang membutuhkan pemetaan skill, knowledge legacy, second career, income opportunity, dan human intelligence untuk AI.

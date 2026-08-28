@@ -459,4 +459,4 @@ input:focus, textarea:focus {
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
-}
+}\n\n/* Micro animations */\n@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }\n.animation-fade { animation: slideUp 0.4s ease; }\n@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }\n.pulse { animation: pulse 1s infinite; }\n.glass-panel:hover { transform: translateY(-4px); box-shadow: 0 8px 40px rgba(0,0,0,0.15); }

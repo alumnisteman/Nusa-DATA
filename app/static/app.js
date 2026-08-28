@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="gauge-text" style="color: ${statusColor}">${data.readiness_score}</div>
                     </div>
                     
-                    <h3 style="color: ${statusColor}; margin: 0">${data.status.replace(/_/g, ' ')}</h3>
+                    <h3 class="status-${data.status.toLowerCase().replace(/_/g, '-')}${data.status === 'READY_FOR_REVIEW' ? ' pulse' : ''}" style="color: ${statusColor}; margin: 0">${data.status.replace(/_/g, ' ')}</h3>
                 </div>
 
                 <h3>🎯 Rekomendasi KBLI</h3>
