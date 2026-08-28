@@ -16,7 +16,10 @@ RUN npm install --unsafe-perm \
     && npx prisma generate
 
 # Copy application source code
-COPY apps/api/ .
+COPY apps/api/ ./
+
+# Ensure services directory exists and has all files
+RUN ls -la services/
 
 # Prune dev dependencies for lean production image
 RUN npm prune --production
