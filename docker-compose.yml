@@ -13,8 +13,10 @@ services:
       - web
     networks:
       - restart-network
+    volumes:
+      - ./infrastructure/nginx/conf.d:/etc/nginx/conf.d:rw
   postgres:
-    image: postgres:16-alpine
+    image: postgis/postgis:15-3.4
     container_name: restart-postgres
     restart: unless-stopped
     environment:
@@ -101,6 +103,8 @@ services:
       AI_API_KEY: mock_ai_key
       BPS_API_KEY: mock_bps_key
       BPS_API_URL: ${BPS_API_URL:-https://webapi.bps.go.id/v1/}
+    volumes:
+      - ./data:/app/data
     depends_on:
       postgres:
         condition: service_healthy

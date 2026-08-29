@@ -199,6 +199,25 @@ h1 {
     grid-column: 1 / -1;
 }
 
+details.advanced-options {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    border: 1px solid var(--glass-border);
+}
+
+.light-theme details.advanced-options {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+details.advanced-options summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-secondary);
+    outline: none;
+}
+
 label {
     display: block;
     margin-bottom: 0.5rem;

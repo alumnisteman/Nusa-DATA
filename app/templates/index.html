@@ -14,7 +14,7 @@
         <div class="nav-content">
             <div class="logo">
                 <div class="logo-icon">N</div>
-                <span>NUSA OSS Copilot</span>
+                <span>NUSA Business Readiness Intelligence</span>
             </div>
             <div class="nav-actions">
                 <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme">
@@ -27,11 +27,12 @@
 
     <div class="container">
         <header class="hero glass-panel">
-            <h1>Business Licensing MVP</h1>
-            <p class="subtitle">Cek kandidat KBLI dan kesiapan awal usaha sebelum proses OSS.</p>
+            <h1>Business Readiness Intelligence</h1>
+            <p class="subtitle">Tahu posisi bisnis Anda. Tahu apa yang kurang. Tahu peluang berikutnya.</p>
             
             <div class="tabs">
                 <button class="tab-btn active" data-target="analysis-tab">Analisis Baru</button>
+                <button class="tab-btn" data-target="passport-tab" id="load-passport">Business Passport (Gap Scanner)</button>
                 <button class="tab-btn" data-target="dashboard-tab" id="load-dashboard">Dashboard & Riwayat</button>
             </div>
         </header>
@@ -40,55 +41,33 @@
             <section id="analysis-tab" class="tab-content active">
                 <div class="grid-layout">
                     <div class="form-container glass-panel">
-                        <h2>Detail Usaha</h2>
+                        <h2>Profil Bisnis</h2>
                         <form id="analysis-form">
                             <div class="input-group">
-                                <label for="business_name">Nama Usaha</label>
-                                <input type="text" id="business_name" name="business_name" value="Cafe Kasturian" required placeholder="Contoh: Toko Maju Jaya">
+                                <label for="business_name">Nama Usaha / Perusahaan</label>
+                                <input type="text" id="business_name" name="business_name" value="" required placeholder="Contoh: PT Teknologi Nusantara">
                             </div>
                             
                             <div class="input-group">
-                                <label for="description">Deskripsi Kegiatan Usaha</label>
-                                <textarea id="description" name="description" required rows="4" placeholder="Jelaskan secara detail aktivitas bisnis Anda...">Menjual kopi, minuman, makanan ringan dan makanan berat di kafe.</textarea>
-                            </div>
-
-                            <div class="form-grid">
-                                <div class="input-group">
-                                    <label for="village">Kelurahan/Desa</label>
-                                    <input type="text" id="village" name="village" value="Kasturian">
-                                </div>
-                                <div class="input-group">
-                                    <label for="district">Kecamatan</label>
-                                    <input type="text" id="district" name="district">
-                                </div>
-                                <div class="input-group">
-                                    <label for="city">Kota</label>
-                                    <input type="text" id="city" name="city" value="Ternate">
-                                </div>
-                                <div class="input-group">
-                                    <label for="province">Provinsi</label>
-                                    <input type="text" id="province" name="province" value="Maluku Utara">
-                                </div>
-                                <div class="input-group">
-                                    <label for="latitude">Latitude</label>
-                                    <input type="number" id="latitude" name="latitude" step="any">
-                                </div>
-                                <div class="input-group">
-                                    <label for="longitude">Longitude</label>
-                                    <input type="number" id="longitude" name="longitude" step="any">
-                                </div>
-                                <div class="input-group">
-                                    <label for="investment_amount">Investasi (Rp)</label>
-                                    <input type="number" id="investment_amount" name="investment_amount">
-                                </div>
+                                <label for="description">Ceritakan bisnis Anda</label>
+                                <textarea id="description" name="description" required rows="6" placeholder="Contoh: Saya punya PT yang menjual komputer, menyediakan jasa instalasi jaringan, maintenance server dan ingin ikut pengadaan pemerintah..."></textarea>
                             </div>
                             
-                            <div class="input-group full-width">
-                                <label for="address">Alamat Lengkap</label>
-                                <input type="text" id="address" name="address">
-                            </div>
-
-                            <button type="submit" class="btn-primary" id="submit-btn">
+                            <details class="advanced-options">
+                                <summary>Opsi Lokasi & Data Tambahan</summary>
+                                <div class="form-grid" style="margin-top: 15px;">
+                                    <div class="input-group">
+                                        <label for="city">Kota</label>
+                                        <input type="text" id="city" name="city" value="">
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="province">Provinsi</label>
+                                        <input type="text" id="province" name="province" value="">
+                                    </div>
+                                </div>
+                            </details>
+                            
+                            <button type="submit" class="btn-primary" id="submit-btn" style="margin-top: 20px;">
                                 <span>Analisis Sekarang</span>
                                 <div class="spinner" style="display: none;"></div>
                             </button>
@@ -101,6 +80,32 @@
                             <div class="empty-icon">📊</div>
                             <h3>Belum ada data</h3>
                             <p>Silakan isi form di samping untuk memulai analisis kesiapan OSS Anda.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="passport-tab" class="tab-content">
+                <div class="grid-layout">
+                    <div class="form-container glass-panel">
+                        <h2>Load Company Digital Twin</h2>
+                        <form id="passport-form">
+                            <div class="input-group">
+                                <label for="company_id">Company ID (UUID)</label>
+                                <input type="text" id="company_id" name="company_id" placeholder="Masukkan UUID Perusahaan (Bisa coba ID sembarang untuk MVP)" required>
+                            </div>
+                            <button type="submit" class="btn-primary" id="passport-submit-btn">
+                                <span>Scan Gap Readiness</span>
+                                <div class="spinner" style="display: none;"></div>
+                            </button>
+                        </form>
+                    </div>
+
+                    <div id="passport-results-container" class="results-container">
+                        <div class="empty-state glass-panel">
+                            <div class="empty-icon">🪪</div>
+                            <h3>NUSA Company Passport</h3>
+                            <p>Masukkan ID Perusahaan Anda untuk melihat NUSA Score dan hasil Gap Scanner.</p>
                         </div>
                     </div>
                 </div>

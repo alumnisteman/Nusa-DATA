@@ -1,55 +1,50 @@
-# NUSA OSS Copilot
+# NUSA - Indonesia Business Readiness Intelligence
 
 [![CI](https://github.com/alumnisteman/Nusa-DATA/actions/workflows/ci.yml/badge.svg)](https://github.com/alumnisteman/Nusa-DATA/actions/workflows/ci.yml)
 [![Docker Hub](https://img.shields.io/docker/pulls/alumnisteman/nusa-data.svg)](https://hub.docker.com/r/alumnisteman/nusa-data)
 
-## Overview
-NUSA OSS Copilot is a FastAPI based decision‑support tool for Business Licensing (OSS). It matches business descriptions to KBLI codes, calculates a readiness score and provides a checklist.
+> *"Tahu posisi bisnis Anda. Tahu apa yang kurang. Tahu peluang berikutnya."*
+> *"Dari Legalitas, Kepatuhan, hingga Peluang Usaha."*
 
-## Prerequisites
+## Visi Produk
+NUSA adalah sebuah platform **Business Readiness Intelligence & Procurement Engine** yang membantu perusahaan dan konsultan B2B untuk memahami posisi kepatuhan hukum mereka dan memetakan peluang pengadaan (tender) secara proaktif.
+
+### Fitur Utama:
+1. **Business DNA & Reasoning Engine**: Memetakan profil bisnis pengguna hanya dari deskripsi teks (KBLI, Aktivitas Utama, Produk/Jasa).
+2. **"What Can I Legally Do?" Engine**: Memeriksa batasan hukum dan syarat perizinan (Bisa dilakukan, Perlu persyaratan, Jangan lakukan).
+3. **Business Gap Scanner**: Menganalisis *readiness score* (legalitas, OSS, SDM, pengalaman) dan apa yang kurang dari perusahaan.
+4. **Tender Reverse Matching**: Memberikan persentase kecocokan profil perusahaan terhadap paket pengadaan yang ada di e-Procurement.
+5. **Tender Gap Simulator**: Simulasi pencapaian syarat tender (misal: "Jika sertifikat X ada, readiness naik menjadi 91%").
+6. **Company Digital Twin & Passport**: Profil digital perusahaan yang senantiasa diperbarui, lengkap dengan QR Code verifikasi.
+7. **Compliance Time Machine**: Sistem analisis dampak peringatan kedaluwarsa dokumen (H-90, H-60, H-30).
+8. **Business Scenario Simulator**: Menghitung dampak jika perusahaan ingin menambah KBLI baru atau ekspansi.
+
+## Prasyarat Deployment
 - Docker & Docker Compose
-- Python 3.12 (optional for local development)
-- PostgreSQL (handled via Docker)
+- API Key (untuk AI Reasoning Engine)
 
-## Installation
-1. Clone the repository:
+## Cara Instalasi
+1. Clone repositori:
    ```bash
    git clone https://github.com/alumnisteman/Nusa-DATA.git
    cd Nusa-DATA
    ```
-2. Copy the example environment file and adjust if needed:
+2. Salin environment file dan masukkan konfigurasi Anda:
    ```bash
    cp .env.example .env
    ```
-3. Build and start the containers:
+3. Bangun dan jalankan dengan Docker Compose (Stack: FastAPI + PostGIS + Nginx):
    ```bash
    docker compose up -d --build
    ```
 
-The API will be available at `http://localhost:8080`.
+Aplikasi web dapat diakses di `http://localhost/` (melalui Nginx Reverse Proxy).
 
-## Updating
-Pull the latest changes and redeploy:
-```bash
-git pull origin main
-docker compose pull
-docker compose up -d --build
-```
+## Dokumentasi Teknis
+- Referensi API: lihat `api_docs.md`.
+- Panduan Kontribusi: lihat `CONTRIBUTING.md`.
+- Lisensi: MIT
 
-## Maintenance
-- **Logs**: `docker compose logs -f` or `docker compose logs <service>`
-- **Database migrations** (if the schema changes):
-  ```bash
-  docker compose run --rm api npx prisma migrate deploy
-  ```
-- **Backup**: Use `docker exec` to dump the PostgreSQL database.
-
-## Documentation
-- API reference: see `api_docs.md`.
-- Contribution guide: see `CONTRIBUTING.md`.
-
-## License
-MIT
 
 
 [![CI](https://github.com/alumnisteman/Nusa-DATA/actions/workflows/ci.yml/badge.svg)](https://github.com/alumnisteman/Nusa-DATA/actions/workflows/ci.yml)

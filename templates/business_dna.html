@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Business DNA - NUSA</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <style>
+        .dna-result { margin-top: 1.5rem; }
+        .dna-card { background: var(--glass-bg, rgba(255,255,255,0.1)); padding: 1rem; border-radius: 0.5rem; backdrop-filter: blur(8px); }
+        .score-badge { font-size: 2rem; font-weight: bold; }
+    </style>
+</head>
+<body class="dark-theme">
+    <div class="container">
+        <h1>Business DNA Generator</h1>
+        <form id="dna-form">
+            <div class="form-group">
+                <label for="description">Deskripsi Usaha</label>
+                <textarea id="description" name="description" rows="4" required placeholder="Tuliskan deskripsi usaha Anda di sini…"></textarea>
+            </div>
+            <button type="submit" class="btn-primary">Generate DNA</button>
+        </form>
+        <div id="dna-output" class="dna-result"></div>
+    </div>
+    <script>
+        const form = document.getElementById('dna-form');
+        const output = document.getElementById('dna-output');
+        form.addEventListener('submit', async e => {
+            e.preventDefault();
+            output.innerHTML = '<p>Memproses…</p>';
+            const description = document.getElementById('description').value;
+            try {
+                const res = await fetch('/api/v1/business-dna', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ description })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Error');
+                const dna = data.dna;
+                const html = `
+                    <div class="dna-card">
+                        <h2>Result</h2>
+                        <p class="score-badge">Score: ${data.score}</p>
+                        <pre>${JSON.stringify(dna, null, 2)}</pre>
+                    </div>`;
+                output.innerHTML = html;
+            } catch (err) {
+                output.innerHTML = `<p style="color:red;">❌ ${err.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

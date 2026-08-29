@@ -99,22 +99,69 @@ document.addEventListener('DOMContentLoaded', () => {
                           
         container.innerHTML = `
             <div class="glass-panel animation-fade">
-                <div class="score-card">
-                    <div class="text-muted" style="margin-bottom: 1rem">OSS READINESS SCORE</div>
+                <div class="score-card" style="margin-bottom: 2rem;">
+                    <div class="text-muted" style="margin-bottom: 1rem">BUSINESS DNA SCORE</div>
                     
                     <div class="radial-gauge">
                         <svg>
                             <circle class="gauge-bg" cx="75" cy="75" r="70"></circle>
                             <circle class="gauge-progress" cx="75" cy="75" r="70" 
-                                    style="stroke: ${statusColor}; stroke-dashoffset: ${440 - (440 * data.readiness_score) / 100}"></circle>
+                                    style="stroke: ${statusColor}; stroke-dashoffset: ${440 - (440 * (data.business_dna_score || 0)) / 100}"></circle>
                         </svg>
-                        <div class="gauge-text" style="color: ${statusColor}">${data.readiness_score}</div>
+                        <div class="gauge-text" style="color: ${statusColor}">${data.business_dna_score || 0}</div>
                     </div>
                     
                     <h3 class="status-${data.status.toLowerCase().replace(/_/g, '-')}${data.status === 'READY_FOR_REVIEW' ? ' pulse' : ''}" style="color: ${statusColor}; margin: 0">${data.status.replace(/_/g, ' ')}</h3>
                 </div>
 
-                <h3>🎯 Rekomendasi KBLI</h3>
+                <h3>🧬 Business DNA</h3>
+                <div class="dna-grid" style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 2rem;">
+                    <div class="dna-item" style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
+                        <strong>Aktivitas Utama:</strong> ${data.business_dna?.aktivitas_utama?.join(", ") || '-'}
+                    </div>
+                    <div class="dna-item" style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
+                        <strong>Aktivitas Pendukung:</strong> ${data.business_dna?.aktivitas_pendukung?.join(", ") || '-'}
+                    </div>
+                    <div class="dna-item" style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
+                        <strong>Produk:</strong> ${data.business_dna?.produk?.join(", ") || '-'}
+                    </div>
+                    <div class="dna-item" style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
+                        <strong>Jasa:</strong> ${data.business_dna?.jasa?.join(", ") || '-'}
+                    </div>
+                    <div class="dna-item" style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
+                        <strong>Target Pasar:</strong> ${data.business_dna?.target_pasar || '-'}
+                    </div>
+                    <div class="dna-item" style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
+                        <strong>Model Transaksi:</strong> ${data.business_dna?.model_transaksi || '-'}
+                    </div>
+                    <div class="dna-item" style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
+                        <strong>Potensi Pengadaan:</strong> ${data.business_dna?.potensi_pengadaan?.join(", ") || '-'}
+                    </div>
+                </div>
+
+                <h3>⚖️ What Can I Legally Do?</h3>
+                <div class="legal-grid" style="margin-bottom: 2rem;">
+                    <div style="border-left: 4px solid var(--success); padding-left: 1rem; margin-bottom: 1rem;">
+                        <h4 style="color: var(--success); margin: 0 0 0.5rem 0;">🟢 Anda Bisa:</h4>
+                        <ul style="margin: 0; padding-left: 1.2rem;">
+                            ${(data.what_can_i_legally_do?.anda_bisa || []).map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div style="border-left: 4px solid var(--warning); padding-left: 1rem; margin-bottom: 1rem;">
+                        <h4 style="color: var(--warning); margin: 0 0 0.5rem 0;">🟡 Anda Perlu Memenuhi:</h4>
+                        <ul style="margin: 0; padding-left: 1.2rem;">
+                            ${(data.what_can_i_legally_do?.anda_perlu_memenuhi || []).map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div style="border-left: 4px solid var(--danger); padding-left: 1rem; margin-bottom: 1rem;">
+                        <h4 style="color: var(--danger); margin: 0 0 0.5rem 0;">🔴 Jangan Lakukan:</h4>
+                        <ul style="margin: 0; padding-left: 1.2rem;">
+                            ${(data.what_can_i_legally_do?.jangan_lakukan || []).map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>🎯 Kandidat KBLI</h3>
                 ${data.kbli_matches.map(x => `
                     <div class="kbli-item">
                         <div style="display: flex; justify-content: space-between; align-items: start">
@@ -125,16 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="text-xs text-muted">${x.reason}</div>
                     </div>
                 `).join('')}
-
-                <h3 style="margin-top: 2rem">📋 Checklist Persyaratan</h3>
-                <div>
-                    ${data.checklist.map(x => `
-                        <div class="checklist-item">
-                            <span>${x.item}</span>
-                            <span class="status-badge ${x.status === 'CHECK' ? 'status-check' : 'status-review'}">${x.status}</span>
-                        </div>
-                    `).join('')}
-                </div>
 
                 <p class="text-xs text-muted" style="margin-top: 2rem; font-style: italic;">
                     ${data.disclaimer}
@@ -219,7 +256,95 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             renderResult(data, body);
         } catch (error) {
-            body.innerHTML = '<p>Gagal memuat detail</p>';
+            console.error(error);
+            body.innerHTML = '<p>Error memuat detail</p>';
         }
     };
+
+    // Passport Form Logic
+    const passportForm = document.getElementById('passport-form');
+    const passportSubmitBtn = document.getElementById('passport-submit-btn');
+    const passportResultsContainer = document.getElementById('passport-results-container');
+
+    if (passportForm) {
+        passportForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const companyId = document.getElementById('company_id').value;
+            
+            passportSubmitBtn.disabled = true;
+            passportSubmitBtn.querySelector('span').style.display = 'none';
+            passportSubmitBtn.querySelector('.spinner').style.display = 'block';
+
+            try {
+                const response = await fetch(`/api/v1/companies/${companyId}/gap-scan`);
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.detail || 'Terjadi kesalahan');
+                }
+                
+                renderPassport(result, passportResultsContainer);
+            } catch (error) {
+                passportResultsContainer.innerHTML = `
+                    <div class="glass-panel" style="border-color: var(--danger)">
+                        <h3 style="color: var(--danger)">❌ Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                passportSubmitBtn.disabled = false;
+                passportSubmitBtn.querySelector('span').style.display = 'block';
+                passportSubmitBtn.querySelector('.spinner').style.display = 'none';
+            }
+        });
+    }
+
+    function renderPassport(data, container) {
+        const company = data.company;
+        const scan = data.scan_result;
+        
+        let statusColor = scan.status === 'PROCUREMENT_READY' ? 'var(--success)' : 
+                          scan.status === 'NEEDS_IMPROVEMENT' ? 'var(--warning)' : 'var(--danger)';
+
+        container.innerHTML = `
+            <div class="glass-panel animation-fade">
+                <div style="display: flex; justify-content: space-between; align-items: start; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <h2 style="margin: 0; color: var(--accent-solid)">${company.name}</h2>
+                        <p class="text-muted" style="margin: 0;">NIB: ${company.nib || '-'}</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <h3 style="margin: 0; color: ${statusColor}">${scan.score} / ${scan.max_score}</h3>
+                        <span class="status-badge" style="background: ${statusColor}; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">
+                            ${scan.status.replace(/_/g, ' ')}
+                        </span>
+                    </div>
+                </div>
+
+                <h3>📋 Hasil Analisis Gap Scanner</h3>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 2rem;">
+                    ${scan.findings.map(f => `
+                        <div style="padding: 1rem; border-left: 4px solid ${f.type === 'DANGER' ? 'var(--danger)' : f.type === 'WARNING' ? 'var(--warning)' : 'var(--success)'}; background: rgba(255,255,255,0.05); border-radius: 0 8px 8px 0;">
+                            ${f.message}
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="grid-layout" style="gap: 1rem;">
+                    <div>
+                        <h3>🏢 Data KBLI</h3>
+                        <ul style="padding-left: 1rem; color: var(--text-secondary)">
+                            ${company.kblis.map(k => `<li>${k.kbli_code} ${k.is_main ? '<strong>(Utama)</strong>' : ''}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>📄 Dokumen Legalitas</h3>
+                        <ul style="padding-left: 1rem; color: var(--text-secondary)">
+                            ${company.documents.map(d => `<li>${d.document_type} ${d.document_number ? '('+d.document_number+')' : ''}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
 });

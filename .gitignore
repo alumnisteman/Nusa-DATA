@@ -67,3 +67,7 @@ query
 migrations.tar.gz
 apps/temp_dockerfile
 apps/.devin/
+
+# Python
+.venv/
+__pycache__/
