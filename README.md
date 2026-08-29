@@ -19,6 +19,21 @@ NUSA adalah sebuah platform **Business Readiness Intelligence & Procurement Engi
 7. **Compliance Time Machine**: Sistem analisis dampak peringatan kedaluwarsa dokumen (H-90, H-60, H-30).
 8. **Business Scenario Simulator**: Menghitung dampak jika perusahaan ingin menambah KBLI baru atau ekspansi.
 
+### 🚀 Ide Fitur & Modul Mendatang (Roadmap NUSA)
+Berikut adalah beberapa konsep modul lanjutan yang dapat dikembangkan untuk memperkuat kapabilitas NUSA di masa depan:
+
+- **🤖 NUSA AI Business Assistant (Chatbot B2B)**
+  Asisten virtual interaktif (seperti ChatGPT) yang dirancang khusus untuk memandu pengguna terkait regulasi, persyaratan OSS, dan kewajiban hukum spesifik sesuai KBLI mereka dengan bahasa yang mudah dipahami.
+- **📡 NUSA Procurement Radar (Integrasi LPSE/LKPP)**
+  Modul scraper atau integrasi API yang secara otomatis menarik data paket lelang pemerintah. Sistem akan mencocokkan (*auto-match*) syarat kualifikasi tender dengan "Business Passport" pengguna dan memberikan notifikasi *real-time* jika ada lelang yang sangat cocok (High Match).
+- **📊 NUSA Tax & Reporting Intelligence**
+  Sistem pengingat dan kalkulator pintar untuk kewajiban rutin perusahaan, seperti perhitungan PPN, PPh, serta pengingat tenggat waktu penyampaian Laporan Kegiatan Penanaman Modal (LKPM) berdasarkan skala bisnis dan KBLI.
+- **🌍 NUSA Export-Import Gateway**
+  Modul khusus untuk perusahaan yang ingin ekspansi ke pasar global. Menyediakan analisis kelayakan (*readiness*) ekspor-impor, mengidentifikasi syarat NIB Kepabeanan, SNI, BPOM, atau izin edar luar negeri yang dibutuhkan.
+- **🌱 NUSA ESG Readiness (Environmental, Social, Governance)**
+  Banyak perusahaan besar / BUMN kini mewajibkan vendor untuk memiliki standar ESG. Modul ini akan mengukur skor ESG perusahaan UMKM dan memberikan panduan praktis (seperti pengelolaan limbah K3, BPJS Ketenagakerjaan, dll) untuk meningkatkan daya saing lelang.
+- **🔐 Digital Document Vault (Brankas Digital Terenkripsi)**
+  Penyimpanan awan terenkripsi yang aman untuk dokumen sensitif perusahaan (NIB, NPWP, Akta Pendirian, SK Kemenkumham, Sertifikat ISO). Dilengkapi teknologi OCR cerdas yang bisa otomatis membaca dan mengekstrak tanggal kedaluwarsa dari dokumen yang diunggah.
 ## Prasyarat Server & Deployment
 - Sistem Operasi: Linux (Ubuntu/Debian) atau Windows dengan WSL2
 - **Docker** dan **Docker Compose** terinstal (versi terbaru).
